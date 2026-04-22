@@ -1,0 +1,162 @@
+<?php
+
+namespace App\Http\Controllers\Web\Backend;
+
+use Exception;
+use App\Models\Category;
+use App\Models\Question;
+use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\QuestionRequest;
+use App\Repositories\Interfaces\QuestionRepositoryInterface;
+
+class QuestionController extends Controller
+{
+    private $questionRepository;
+
+    public function __construct(QuestionRepositoryInterface $questionRepository)
+    {
+        $this->questionRepository = $questionRepository;
+    }
+
+
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = $this->questionRepository->all();
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('image', function ($data) {
+                    if ($data->image) {
+                        $url = asset($data->image);
+                        return '<img src="' . $url . '" alt="image" width="50px" height="50px" style="margin-left:20px;">';
+                    } else {
+                        return '<img src="' . asset('default/logo.svg') . '" alt="image" width="50px" height="50px" style="margin-left:20px;">';
+                    }
+                })
+                ->addColumn('category', function ($data) {
+                    return $data->category->name ?? 'N/A';
+                })
+
+                ->addColumn('status', function ($data) {
+                    $backgroundColor = $data->status == "active" ? '#4CAF50' : '#ccc';
+                    $sliderTranslateX = $data->status == "active" ? '26px' : '2px';
+
+                    $status = '<div class="d-flex justify-content-center align-items-center">';
+                    $status .= '<div class="form-check form-switch" style="position: relative; width: 50px; height: 24px; background-color: ' . $backgroundColor . '; border-radius: 12px; transition: background-color 0.3s ease; cursor: pointer;">';
+                    $status .= '<input onclick="showStatusChangeAlert(' . $data->id . ')" type="checkbox" class="form-check-input" id="customSwitch' . $data->id . '" getAreaid="' . $data->id . '" name="status" style="position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 2; cursor: pointer;">';
+                    $status .= '<span style="position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: white; border-radius: 50%; transition: transform 0.3s ease; transform: translateX(' . $sliderTranslateX . ');"></span>';
+                    $status .= '<label for="customSwitch' . $data->id . '" class="form-check-label" style="margin-left: 10px;"></label>';
+                    $status .= '</div>';
+                    $status .= '</div>';
+
+                    return $status;
+                })
+                ->addColumn('action', function ($data) {
+                    return '<div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+
+                                <a href="#" type="button" onclick="goToEdit(' . $data->id . ')" class="btn btn-primary fs-14 text-white delete-icn" title="Delete">
+                                    <i class="fe fe-edit"></i>
+                                </a>
+
+                                <a href="#" type="button" onclick="showDeleteConfirm(' . $data->id . ')" class="btn btn-danger fs-14 text-white delete-icn" title="Delete">
+                                    <i class="fe fe-trash"></i>
+                                </a>
+                            </div>';
+                })
+                ->rawColumns(['image', 'status', 'action','category'])
+                ->make();
+        }
+        return view("backend.layouts.question.index");
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $category = Category::all();
+        return view('backend.layouts.question.create', compact('category'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(QuestionRequest $request)
+    {
+        $validatedData = $request->validated();
+
+        try {
+            $this->questionRepository->create($validatedData);
+            session()->put('t-success', 'Question created successfully');
+        } catch (Exception $e) {
+            session()->put('t-error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.question.index')->with('t-success', 'Question created successfully');
+    }
+
+
+    public function edit(Request $request, $id)
+{
+    $question = $this->questionRepository->find($id);
+    $category = Category::all();
+
+    return view('backend.layouts.question.edit', compact('question', 'category'));
+}
+
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(QuestionRequest $request, $id)
+    {
+        $validatedData = $request->validated();
+
+        try {
+            $this->questionRepository->update($id, $validatedData);
+            session()->put('t-success', 'Question updated successfully');
+        } catch (Exception $e) {
+            session()->put('t-error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.question.index');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        try {
+            $this->questionRepository->delete($id);
+            return response()->json([
+                'status' => 't-success',
+                'message' => 'Your action was successful!'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 't-error',
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function status(int $id): JsonResponse
+    {
+        try {
+            $this->questionRepository->status($id);
+            return response()->json([
+                'status' => 't-success',
+                'message' => 'Your action was successful!',
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 't-error',
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+}

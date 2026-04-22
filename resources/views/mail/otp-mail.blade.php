@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - {{ config('app.name') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .wrapper {
+            width: 100%;
+            padding: 40px 15px;
+            margin-top: 20px;
+        }
+
+        .container {
+            max-width: 560px;
+            margin: 0 auto;
+            background-color: #7d1414;
+            border-radius: 22px;
+            padding: 45px 35px;
+            text-align: center;
+            color: #f5e6dc;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+            margin-top: 120px;
+        }
+
+        .logo img {
+            max-width: 160px;
+        }
+
+        .header p {
+            font-size: 30px;
+            font-weight: 400;
+            letter-spacing: 1.2px;
+            margin: 25px 0 20px;
+            color: #f1ddd0;
+        }
+
+        .content p {
+            font-size: 20px;
+            line-height: 1.75;
+            margin-bottom: 20px;
+            color: #f3e3d8;
+            padding: auto;
+        }
+
+        .otp-label {
+            font-size: 26px;
+            margin-top: 28px;
+            margin-bottom: 10px;
+            color: #f1ddd0;
+            letter-spacing: 0.6px;
+        }
+
+        .verification-code {
+            font-size: 44px;
+            font-weight: 700;
+            letter-spacing: 7px;
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 16px 32px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 18px 0;
+        }
+
+        .note {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 22px;
+            color: #f2dfd4;
+        }
+
+        .footer {
+            margin-top: 38px;
+            font-size: 12px;
+            opacity: 0.75;
+            color: #f1dbcf;
+            letter-spacing: 0.4px;
+        }
+
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 32px 22px;
+                margin-top: 80px;
+            }
+
+            .header h5 {
+                font-size: 24px;
+            }
+
+            .content p {
+                font-size: 16px;
+            }
+
+            .verification-code {
+                font-size: 36px;
+                letter-spacing: 5px;
+                padding: 14px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="logo" style="margin-bottom: 25px;">
+            <img src="{{ $message->embed(public_path('default/emaillogos.png')) }}" alt="{{ config('app.name') }} Logo"
+                style="max-width: 150px;">
+        </div>
+        <div class="header">
+            <p>Forgot Password</p>
+        </div>
+
+        <div class="content">
+            <p>
+                You have requested to reset your password. Use the One-Time Password (OTP) below to continue.
+            </p>
+
+            <div class="otp-label">
+                Your One-Time Password (OTP):
+            </div>
+
+            <div class="verification-code">
+                {{ $otp }}
+            </div>
+
+            <p class="note">
+                This OTP is valid for the next 5 minutes.
+                Please do not share this code with anyone.
+            </p>
+        </div>
+
+        <div class="footer">
+            © {{ date('Y') }} Chelsey Brown LLC | Curio Blvd. All rights reserved.
+        </div>
+
+    </div>
+
+</body>
+
+</html>

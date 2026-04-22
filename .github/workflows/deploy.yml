@@ -1,0 +1,28 @@
+name: Deploy Private GitHub repository to our server
+on:
+  push:
+    branches:
+      - dev
+jobs:
+  FTP-Deploy-Action:
+    name: FTP-Deploy-Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+        with:
+          fetch-depth: 2
+      - name: FTP-Deploy-Action
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: 72.61.233.228
+          username: dhakatailors
+          password: 79Zr9nb1jfjQ5OTlWh9e
+          exclude: |
+            public/**
+            **/.git*
+            **/node_modules/**
+            **/vendor/**
+            **/tests/**
+            **/storage/**
+            **/stubs/**
+       
