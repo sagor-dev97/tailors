@@ -63,6 +63,24 @@ class OrderDetail extends Model
     'due',
 
     'note',
+
+     'botam_no',
+    'metal_botam_no',
+    'isnaf_botam_no',
+    'tira',
+    'serowani_kolar',
+    'band_kolar',
+    'shirt_kolar',
+
+    'book_pocket',
+    'book_pocket_sticker',
+    'two_pack_ring',
+    'kof_hand',
+    'koflin_hand',
+    'kolar_black_sticker',
+    'koflin_hand_pocket',
+    'koflin_hand_pocket_sticker',
+    'koflin_hand_kolar',
 ];
 
 }

@@ -2,7 +2,7 @@ name: Deploy Private GitHub repository to our server
 on:
   push:
     branches:
-      - dev
+      - main
 jobs:
   FTP-Deploy-Action:
     name: FTP-Deploy-Action

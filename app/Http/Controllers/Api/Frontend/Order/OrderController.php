@@ -73,11 +73,7 @@ class OrderController extends Controller
                 'receiver' => $request->receiver,
             ]);
 
-            /*
-        |--------------------------------------------------------------------------
-        | 3️⃣ Create Order
-        |--------------------------------------------------------------------------
-        */
+
 
             $order = Order::create([
                 'user_id'       => $user->id,
@@ -89,11 +85,6 @@ class OrderController extends Controller
                 'status'        => 'pending',
             ]);
 
-            /*
-        |--------------------------------------------------------------------------
-        | 4️⃣ Create Order Details
-        |--------------------------------------------------------------------------
-        */
 
             $orderDetail = OrderDetail::create([
 
@@ -161,6 +152,26 @@ class OrderController extends Controller
 
                 /* ===== note ===== */
                 'note' => $request->note,
+
+                /* ===== new fields ===== */
+                'botam_no'                 => $request->botam_no,
+                'metal_botam_no'           => $request->metal_botam_no,
+                'isnaf_botam_no'           => $request->isnaf_botam_no,
+                'tira'                     => $request->tira,
+                'serowani_kolar'           => $request->serowani_kolar,
+                'band_kolar'               => $request->band_kolar,
+                'shirt_kolar'              => $request->shirt_kolar,
+
+                'book_pocket'              => $request->book_pocket ?? false,
+                'book_pocket_sticker'      => $request->book_pocket_sticker ?? false,
+                'two_pack_ring'            => $request->two_pack_ring ?? false,
+                'kof_hand'                 => $request->kof_hand ?? false,
+                'koflin_hand'              => $request->koflin_hand ?? false,
+                'kolar_black_sticker'      => $request->kolar_black_sticker ?? false,
+                'koflin_hand_pocket'       => $request->koflin_hand_pocket ?? false,
+                'koflin_hand_pocket_sticker' => $request->koflin_hand_pocket_sticker ?? false,
+                'koflin_hand_kolar'        => $request->koflin_hand_kolar ?? false,
+
             ]);
 
 
@@ -182,168 +193,170 @@ class OrderController extends Controller
         }
     }
 
-public function update(Request $request, $id)
-{
-    DB::beginTransaction();
+    public function update(Request $request, $id)
+    {
+        DB::beginTransaction();
 
-    try {
-        $authUser = auth('api')->user();
+        try {
+            $authUser = auth('api')->user();
 
-        if (!$authUser) {
+            if (!$authUser) {
+                return response()->json([
+                    'status'  => false,
+                    'code'    => 401,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+
+            $order = Order::with(['customer', 'orderDetail'])->find($id);
+
+            if (!$order) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Order not found',
+                ]);
+            }
+
+
+            $customerData = array_filter([
+                'name'     => $request->name,
+                'address'  => $request->address,
+                'phone'    => $request->phone_number,
+                'receiver' => $request->receiver,
+            ], fn($value) => !is_null($value));
+
+            if (!empty($customerData) && $order->customer) {
+                $order->customer->update($customerData);
+            }
+
+            $orderData = array_filter([
+                'receiver'      => $request->receiver,
+                'order_date'    => $request->order_date,
+                'delivery_date' => $request->delivery_date,
+                'status'        => $request->status,
+            ], fn($value) => !is_null($value));
+
+            if (!empty($orderData)) {
+                $order->update($orderData);
+            }
+
+
+            $orderDetailsData = array_filter([
+
+                // garments
+                'single_hand_punjabi' => $request->single_hand_punjabi,
+                'double_hand_punjabi' => $request->double_hand_punjabi,
+                'punjabi'             => $request->punjabi,
+                'arabian_jubba'       => $request->arabian_jubba,
+                'kabli'               => $request->kabli,
+                'fatwa'               => $request->fatwa,
+                'salwar'              => $request->salwar,
+                'pajama'              => $request->pajama,
+                'punjabi_pajama'      => $request->punjabi_pajama,
+
+                // upper features
+                'chest_pocket'  => $request->chest_pocket,
+                'collar_button' => $request->collar_button,
+                'double_stitch' => $request->double_stitch,
+                'front_button'  => $request->front_button,
+                'side_cut'      => $request->side_cut,
+
+                // bottom features
+                'back_pocket'          => $request->back_pocket,
+                'front_button_pocket'  => $request->front_button_pocket,
+                'single_pocket_design' => $request->single_pocket_design,
+                'double_pocket_design' => $request->double_pocket_design,
+
+                // measurements
+                'length'   => $request->length,
+                'body'     => $request->body,
+                'belly'    => $request->belly,
+                'sleeves'  => $request->sleeves,
+                'neck'     => $request->neck,
+                'shoulder' => $request->shoulder,
+                'cuff'     => $request->cuff,
+                'hip'      => $request->hip,
+
+                'bottom_length' => $request->bottom_length,
+                'natural'       => $request->natural,
+                'waist'         => $request->waist,
+                'hi'            => $request->hi,
+                'run'           => $request->run,
+
+                // cost
+                'fabric_qty'       => $request->fabric_qty,
+                'fabric_price'     => $request->fabric_price,
+                'labor_qty'        => $request->labor_qty,
+                'labor_price'      => $request->labor_price,
+                'design_qty'       => $request->design_qty,
+                'design_price'     => $request->design_price,
+                'button_qty'       => $request->button_qty,
+                'button_price'     => $request->button_price,
+                'embroidery_qty'   => $request->embroidery_qty,
+                'embroidery_price' => $request->embroidery_price,
+                'courier_qty'      => $request->courier_qty,
+                'courier_price'    => $request->courier_price,
+
+                // money
+                'total'   => $request->total,
+                'advance' => $request->advance,
+                'due'     => $request->due,
+
+                'note' => $request->note,
+
+                /* ===== new fields ===== */
+                'botam_no'                 => $request->botam_no,
+                'metal_botam_no'           => $request->metal_botam_no,
+                'isnaf_botam_no'           => $request->isnaf_botam_no,
+                'tira'                     => $request->tira,
+                'serowani_kolar'           => $request->serowani_kolar,
+                'band_kolar'               => $request->band_kolar,
+                'shirt_kolar'              => $request->shirt_kolar,
+
+                'book_pocket'              => $request->book_pocket,
+                'book_pocket_sticker'      => $request->book_pocket_sticker,
+                'two_pack_ring'            => $request->two_pack_ring,
+                'kof_hand'                 => $request->kof_hand,
+                'koflin_hand'              => $request->koflin_hand,
+                'kolar_black_sticker'      => $request->kolar_black_sticker,
+                'koflin_hand_pocket'       => $request->koflin_hand_pocket,
+                'koflin_hand_pocket_sticker' => $request->koflin_hand_pocket_sticker,
+                'koflin_hand_kolar'        => $request->koflin_hand_kolar,
+
+            ], fn($value) => !is_null($value));
+
+            if (!empty($orderDetailsData)) {
+
+                if ($order->orderDetail) {
+                    // ✅ update existing
+                    $order->orderDetail->update($orderDetailsData);
+                } else {
+                    // ✅ create new if not exists
+                    $order->orderDetail()->create(
+                        $orderDetailsData + ['order_id' => $order->id]
+                    );
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => true,
+                'code'    => 200,
+                'message' => 'Order updated successfully',
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
             return response()->json([
                 'status'  => false,
-                'code'    => 401,
-                'message' => 'Unauthorized',
-            ], 401);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 1️⃣ Find Order
-        |-------------------------------------------------------------------
-        */
-        $order = Order::with(['customer', 'orderDetail'])->find($id);
-
-        if (!$order) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Order not found',
+                'code'    => 500,
+                'message' => $e->getMessage(),
             ]);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2️⃣ Update Customer (Only passed fields)
-        |--------------------------------------------------------------------------
-        */
-        $customerData = array_filter([
-            'name'     => $request->name,
-            'address'  => $request->address,
-            'phone'    => $request->phone_number,
-            'receiver' => $request->receiver,
-        ], fn($value) => !is_null($value));
-
-        if (!empty($customerData) && $order->customer) {
-            $order->customer->update($customerData);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 3️⃣ Update Order (Only passed fields)
-        |--------------------------------------------------------------------------
-        */
-        $orderData = array_filter([
-            'receiver'      => $request->receiver,
-            'order_date'    => $request->order_date,
-            'delivery_date' => $request->delivery_date,
-            'status'        => $request->status,
-        ], fn($value) => !is_null($value));
-
-        if (!empty($orderData)) {
-            $order->update($orderData);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 4️⃣ Update Order Details (Only passed fields)
-        |--------------------------------------------------------------------------
-        */
-        $orderDetailsData = array_filter([
-
-            // garments
-            'single_hand_punjabi' => $request->single_hand_punjabi,
-            'double_hand_punjabi' => $request->double_hand_punjabi,
-            'punjabi'             => $request->punjabi,
-            'arabian_jubba'       => $request->arabian_jubba,
-            'kabli'               => $request->kabli,
-            'fatwa'               => $request->fatwa,
-            'salwar'              => $request->salwar,
-            'pajama'              => $request->pajama,
-            'punjabi_pajama'      => $request->punjabi_pajama,
-
-            // upper features
-            'chest_pocket'  => $request->chest_pocket,
-            'collar_button' => $request->collar_button,
-            'double_stitch' => $request->double_stitch,
-            'front_button'  => $request->front_button,
-            'side_cut'      => $request->side_cut,
-
-            // bottom features
-            'back_pocket'          => $request->back_pocket,
-            'front_button_pocket'  => $request->front_button_pocket,
-            'single_pocket_design' => $request->single_pocket_design,
-            'double_pocket_design' => $request->double_pocket_design,
-
-            // measurements
-            'length'   => $request->length,
-            'body'     => $request->body,
-            'belly'    => $request->belly,
-            'sleeves'  => $request->sleeves,
-            'neck'     => $request->neck,
-            'shoulder' => $request->shoulder,
-            'cuff'     => $request->cuff,
-            'hip'      => $request->hip,
-
-            'bottom_length' => $request->bottom_length,
-            'natural'       => $request->natural,
-            'waist'         => $request->waist,
-            'hi'            => $request->hi,
-            'run'           => $request->run,
-
-            // cost
-            'fabric_qty'       => $request->fabric_qty,
-            'fabric_price'     => $request->fabric_price,
-            'labor_qty'        => $request->labor_qty,
-            'labor_price'      => $request->labor_price,
-            'design_qty'       => $request->design_qty,
-            'design_price'     => $request->design_price,
-            'button_qty'       => $request->button_qty,
-            'button_price'     => $request->button_price,
-            'embroidery_qty'   => $request->embroidery_qty,
-            'embroidery_price' => $request->embroidery_price,
-            'courier_qty'      => $request->courier_qty,
-            'courier_price'    => $request->courier_price,
-
-            // money
-            'total'   => $request->total,
-            'advance' => $request->advance,
-            'due'     => $request->due,
-
-            'note' => $request->note,
-        ], fn($value) => !is_null($value));
-
-        if (!empty($orderDetailsData)) {
-
-            if ($order->orderDetail) {
-                // ✅ update existing
-                $order->orderDetail->update($orderDetailsData);
-            } else {
-                // ✅ create new if not exists
-                $order->orderDetail()->create(
-                    $orderDetailsData + ['order_id' => $order->id]
-                );
-            }
-        }
-
-        DB::commit();
-
-        return response()->json([
-            'status'  => true,
-            'code'    => 200,
-            'message' => 'Order updated successfully',
-        ]);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'status'  => false,
-            'code'    => 500,
-            'message' => $e->getMessage(),
-        ]);
     }
-}
 
 
 
