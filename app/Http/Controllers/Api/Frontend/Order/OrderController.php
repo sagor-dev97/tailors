@@ -181,6 +181,7 @@ class OrderController extends Controller
                 'status'  => true,
                 'code'   => 200,
                 'message' => 'Order created successfully',
+                'order_id'=> $order->id
             ]);
         } catch (\Exception $e) {
 
