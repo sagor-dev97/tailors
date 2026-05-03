@@ -776,63 +776,214 @@ class OrderController extends Controller
     // }
 
     private function sendSms($phone, $message, $orderId)
-{
-    try {
-        // ফোন নাম্বার ক্লিন করা
-        $phone = preg_replace('/[^0-9]/', '', $phone);
+    {
+        try {
+            // ফোন নাম্বার ক্লিন করা
+            $phone = preg_replace('/[^0-9]/', '', $phone);
 
-        // ডাটাবেজ থেকে API সেটিংস নেওয়া
-        $smsSetting = SmsSetting::first();
-        
-        $apiKey = $smsSetting->api_key ?? env('SMS_API_KEY');
-        $senderId = $smsSetting->sender_id ?? env('SMS_SENDER_ID');
+            // ডাটাবেজ থেকে API সেটিংস নেওয়া
+            $smsSetting = SmsSetting::first();
 
-        $response = Http::timeout(10)->get('https://api.automas.com.bd/smsapiv3', [
-            'apikey'  => $apiKey,
-            'sender'  => $senderId,
-            'msisdn'  => $phone,
-            'smstext' => $message,
-        ]);
+            $apiKey = $smsSetting->api_key ?? env('SMS_API_KEY');
+            $senderId = $smsSetting->sender_id ?? env('SMS_SENDER_ID');
 
-        // রেসপন্স চেক করা
-        if (!$response->successful()) {
-            Log::warning('SMS API failed', ['order_id' => $orderId]);
+            $response = Http::timeout(10)->get('https://api.automas.com.bd/smsapiv3', [
+                'apikey'  => $apiKey,
+                'sender'  => $senderId,
+                'msisdn'  => $phone,
+                'smstext' => $message,
+            ]);
+
+            // রেসপন্স চেক করা
+            if (!$response->successful()) {
+                Log::warning('SMS API failed', ['order_id' => $orderId]);
+                return false;
+            }
+
+            $data = $response->json();
+
+            // স্ট্যাটাস চেক করা
+            $status = $data['response'][0]['status'] ?? null;
+
+            if ($status === null) {
+                Log::error('Invalid SMS response', ['order_id' => $orderId, 'data' => $data]);
+                return false;
+            }
+
+            Log::info('SMS RESPONSE', [
+                'order_id' => $orderId,
+                'status' => $status,
+            ]);
+
+            return $status === 0;
+        } catch (\Exception $e) {
+            Log::error('SMS ERROR', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
             return false;
         }
-
-        $data = $response->json();
-
-        // স্ট্যাটাস চেক করা
-        $status = $data['response'][0]['status'] ?? null;
-
-        if ($status === null) {
-            Log::error('Invalid SMS response', ['order_id' => $orderId, 'data' => $data]);
-            return false;
-        }
-
-        Log::info('SMS RESPONSE', [
-            'order_id' => $orderId,
-            'status' => $status,
-        ]);
-
-        return $status === 0;
-    } catch (\Exception $e) {
-        Log::error('SMS ERROR', [
-            'order_id' => $orderId,
-            'error' => $e->getMessage(),
-        ]);
-        return false;
     }
-}
 
-public function updateOrderStatus(Request $request, $id)
+    // public function updateOrderStatus(Request $request, $id)
+    // {
+    //     $user = auth('api')->user();
+
+    //     if (!$user) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'code' => 401,
+    //             'message' => 'Unauthorized',
+    //         ], 401);
+    //     }
+
+    //     $request->validate([
+    //         'status' => 'required|string|in:pending,processing,completed,cancelled,shipped,delivered'
+    //     ]);
+
+    //     // ট্রানজেকশন স্টার্ট
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $order = Order::with('customer')->find($id);
+
+    //         if (!$order) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Order not found',
+    //             ], 404);
+    //         }
+
+    //         // ডুপ্লিকেট স্ট্যাটাস চেক
+    //         if ($order->status === $request->status) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Status already ' . $request->status,
+    //             ], 400);
+    //         }
+
+    //         $phone = $order->customer->phone ?? null;
+
+    //         if (!$phone) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Phone not found',
+    //             ], 404);
+    //         }
+
+    //         $smsSetting = SmsSetting::first();
+
+    //         if (!$smsSetting) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'SMS setting not configured',
+    //             ], 500);
+    //         }
+
+    //         // ============= JSON থেকে টেমপ্লেট নেওয়া =============
+    //         // স্ট্যাটাস অনুযায়ী টেমপ্লেট পাওয়া
+    //         $templates = $smsSetting->templates_json ?? [];
+
+    //         // নির্দিষ্ট স্ট্যাটাসের টেমপ্লেট, না পেলে ডিফল্ট
+    //         $template = $templates[$request->status] ?? ($templates['default'] ?? $smsSetting->sms_text);
+
+    //         if (empty($template)) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'SMS template not found for status: ' . $request->status,
+    //             ], 500);
+    //         }
+
+    //         // বাংলা স্ট্যাটাস নাম
+    //         $banglaStatus = [
+    //             'pending' => 'অপেক্ষমান',
+    //             'processing' => 'প্রক্রিয়াধীন',
+    //             'shipped' => 'পাঠানো হয়েছে',
+    //             'delivered' => 'ডেলিভারি হয়েছে',
+    //             'completed' => 'সম্পন্ন হয়েছে',
+    //             'cancelled' => 'বাতিল করা হয়েছে'
+    //         ];
+
+    //         // মেসেজ রিপ্লেস করা
+    //         $message = str_replace(
+    //             [
+    //                 '{company}',
+    //                 '{order_number}',
+    //                 '{status}',
+    //                 '{bangla_status}',
+    //                 '{customer_name}',
+    //                 '{customer_phone}',
+    //                 '{order_date}',
+    //                 '{total_amount}',
+    //                 '{payment_method}',
+    //                 '{delivery_address}'
+    //             ],
+    //             [
+    //                 $smsSetting->sender ?? 'Our Company',
+    //                 $order->order_number,
+    //                 $request->status,
+    //                 $banglaStatus[$request->status] ?? $request->status,
+    //                 $order->customer->name ?? 'Customer',
+    //                 $order->customer->phone ?? '',
+    //                 $order->created_at ? $order->created_at->format('d/m/Y') : date('d/m/Y'),
+    //                 $order->total_amount ?? '0',
+    //                 $order->payment_method ?? 'Cash On Delivery',
+    //                 $order->delivery_address ?? ''
+    //             ],
+    //             $template
+    //         );
+
+    //         $message = strip_tags($message);
+
+    //         // এসএমএস পাঠানো
+    //         $smsSent = $this->sendSms($phone, $message, $order->id);
+
+    //         if (!$smsSent) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'SMS failed, order not updated',
+    //             ], 400);
+    //         }
+
+    //         // অর্ডার আপডেট
+    //         $order->update([
+    //             'status' => $request->status
+    //         ]);
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'SMS sent & order updated',
+    //             'data' => $order
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('ORDER ERROR', [
+    //             'error' => $e->getMessage(),
+    //         ]);
+
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+    public function updateOrderStatus(Request $request, $id)
 {
     $user = auth('api')->user();
 
     if (!$user) {
         return response()->json([
-            'status' => false,
-            'code' => 401,
+            'status'  => false,
+            'code'    => 401,
             'message' => 'Unauthorized',
         ], 401);
     }
@@ -841,7 +992,6 @@ public function updateOrderStatus(Request $request, $id)
         'status' => 'required|string|in:pending,processing,completed,cancelled,shipped,delivered'
     ]);
 
-    // ট্রানজেকশন স্টার্ট
     DB::beginTransaction();
 
     try {
@@ -849,132 +999,149 @@ public function updateOrderStatus(Request $request, $id)
 
         if (!$order) {
             DB::rollBack();
+
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Order not found',
             ], 404);
         }
 
-        // ডুপ্লিকেট স্ট্যাটাস চেক
+        // Duplicate status check
         if ($order->status === $request->status) {
             DB::rollBack();
+
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Status already ' . $request->status,
             ], 400);
         }
 
-        $phone = $order->customer->phone ?? null;
-
-        if (!$phone) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'Phone not found',
-            ], 404);
-        }
-
-        $smsSetting = SmsSetting::first();
-
-        if (!$smsSetting) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'SMS setting not configured',
-            ], 500);
-        }
-
-        // ============= JSON থেকে টেমপ্লেট নেওয়া =============
-        // স্ট্যাটাস অনুযায়ী টেমপ্লেট পাওয়া
-        $templates = $smsSetting->templates_json ?? [];
-        
-        // নির্দিষ্ট স্ট্যাটাসের টেমপ্লেট, না পেলে ডিফল্ট
-        $template = $templates[$request->status] ?? ($templates['default'] ?? $smsSetting->sms_text);
-        
-        if (empty($template)) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'SMS template not found for status: ' . $request->status,
-            ], 500);
-        }
-
-        // বাংলা স্ট্যাটাস নাম
-        $banglaStatus = [
-            'pending' => 'অপেক্ষমান',
-            'processing' => 'প্রক্রিয়াধীন',
-            'shipped' => 'পাঠানো হয়েছে',
-            'delivered' => 'ডেলিভারি হয়েছে',
-            'completed' => 'সম্পন্ন হয়েছে',
-            'cancelled' => 'বাতিল করা হয়েছে'
-        ];
-
-        // মেসেজ রিপ্লেস করা
-        $message = str_replace(
-            [
-                '{company}',
-                '{order_number}',
-                '{status}',
-                '{bangla_status}',
-                '{customer_name}',
-                '{customer_phone}',
-                '{order_date}',
-                '{total_amount}',
-                '{payment_method}',
-                '{delivery_address}'
-            ],
-            [
-                $smsSetting->sender ?? 'Our Company',
-                $order->order_number,
-                $request->status,
-                $banglaStatus[$request->status] ?? $request->status,
-                $order->customer->name ?? 'Customer',
-                $order->customer->phone ?? '',
-                $order->created_at ? $order->created_at->format('d/m/Y') : date('d/m/Y'),
-                $order->total_amount ?? '0',
-                $order->payment_method ?? 'Cash On Delivery',
-                $order->delivery_address ?? ''
-            ],
-            $template
-        );
-
-        $message = strip_tags($message);
-
-        // এসএমএস পাঠানো
-        $smsSent = $this->sendSms($phone, $message, $order->id);
-
-        if (!$smsSent) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'SMS failed, order not updated',
-            ], 400);
-        }
-
-        // অর্ডার আপডেট
+        // ===============================
+        // UPDATE ORDER STATUS FIRST
+        // ===============================
         $order->update([
             'status' => $request->status
         ]);
 
+        $smsWarning = null;
+
+        // ===============================
+        // SMS SETTINGS CHECK
+        // ===============================
+        $smsSetting = SmsSetting::first();
+
+        // No settings found
+        if (!$smsSetting) {
+
+            $smsWarning = 'Order updated successfully, but SMS settings not found.';
+        }
+        // Service disabled
+        elseif ($smsSetting->service_status != 1) {
+
+            $smsWarning = 'Order updated successfully, but SMS service is disabled.';
+        }
+        // API key or sender id missing
+        elseif (empty($smsSetting->api_key) || empty($smsSetting->sender_id)) {
+
+            $smsWarning = 'Order updated successfully, but API Key or Sender ID not found.';
+        } else {
+
+            // ===============================
+            // PHONE CHECK
+            // ===============================
+            $phone = $order->customer->phone ?? null;
+
+            if (!$phone) {
+
+                $smsWarning = 'Order updated successfully, but customer phone not found.';
+            } else {
+
+                // ===============================
+                // TEMPLATE
+                // ===============================
+                $templates = $smsSetting->templates_json ?? [];
+
+                $template = $templates[$request->status]
+                    ?? ($templates['default'] ?? $smsSetting->sms_text);
+
+                if (!empty($template)) {
+
+                    $banglaStatus = [
+                        'pending'    => 'অপেক্ষমান',
+                        'processing' => 'প্রক্রিয়াধীন',
+                        'shipped'    => 'পাঠানো হয়েছে',
+                        'delivered'  => 'ডেলিভারি হয়েছে',
+                        'completed'  => 'সম্পন্ন হয়েছে',
+                        'cancelled'  => 'বাতিল করা হয়েছে'
+                    ];
+
+                    $message = str_replace(
+                        [
+                            '{company}',
+                            '{order_number}',
+                            '{status}',
+                            '{bangla_status}',
+                            '{customer_name}',
+                            '{customer_phone}',
+                            '{order_date}',
+                            '{total_amount}',
+                            '{payment_method}',
+                            '{delivery_address}'
+                        ],
+                        [
+                            $smsSetting->sender ?? 'Our Company',
+                            $order->order_number,
+                            $request->status,
+                            $banglaStatus[$request->status] ?? $request->status,
+                            $order->customer->name ?? 'Customer',
+                            $order->customer->phone ?? '',
+                            $order->created_at
+                                ? $order->created_at->format('d/m/Y')
+                                : date('d/m/Y'),
+                            $order->total_amount ?? '0',
+                            $order->payment_method ?? 'Cash On Delivery',
+                            $order->delivery_address ?? ''
+                        ],
+                        $template
+                    );
+
+                    $message = strip_tags($message);
+
+                    $smsSent = $this->sendSms($phone, $message, $order->id);
+
+                    if (!$smsSent) {
+                        $smsWarning = 'Order updated successfully, but SMS sending failed.';
+                    }
+                } else {
+
+                    $smsWarning = 'Order updated successfully, but SMS template not found.';
+                }
+            }
+        }
+
         DB::commit();
 
         return response()->json([
-            'status' => true,
-            'message' => 'SMS sent & order updated',
-            'data' => $order
+            'status'  => true,
+            'message' => $smsWarning ?? 'SMS sent & order updated successfully.',
+            'data'    => $order
         ]);
+
     } catch (\Exception $e) {
+
         DB::rollBack();
+
         Log::error('ORDER ERROR', [
             'error' => $e->getMessage(),
         ]);
 
         return response()->json([
-            'status' => false,
+            'status'  => false,
             'message' => $e->getMessage(),
         ], 500);
     }
 }
+
 }
 
 

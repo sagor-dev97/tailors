@@ -175,69 +175,69 @@ class SettingController extends Controller
     // }
 
     public function updateKey(Request $request)
-{
-    $request->validate([
-        'api_key'       => 'nullable|string|max:255',
-        'sender_id'     => 'nullable|string|max:255',
-        'sender'        => 'nullable|string|max:255',
-        'type'          => 'nullable|string|max:50',
-        'sms_format'    => 'nullable|string|max:50',
-        'templates_json' => 'nullable|array',  // Changed from 'templates' to 'templates_json'
-    ]);
+    {
+        $request->validate([
+            'api_key'       => 'nullable|string|max:255',
+            'sender_id'     => 'nullable|string|max:255',
+            'sender'        => 'nullable|string|max:255',
+            'type'          => 'nullable|string|max:50',
+            'sms_format'    => 'nullable|string|max:50',
+            'templates_json' => 'nullable|array',  // Changed from 'templates' to 'templates_json'
+        ]);
 
-    $sms = SmsSetting::first();
+        $sms = SmsSetting::first();
 
-    if (!$sms) {
-        $sms = new SmsSetting();
-    }
+        if (!$sms) {
+            $sms = new SmsSetting();
+        }
 
-    // Basic fields update
-    $sms->api_key     = $request->api_key;
-    $sms->sender_id   = $request->sender_id;
-    $sms->sender      = $request->sender;
-    $sms->type        = $request->type;
-    $sms->sms_format  = $request->sms_format;
+        // Basic fields update
+        $sms->api_key     = $request->api_key;
+        $sms->sender_id   = $request->sender_id;
+        $sms->sender      = $request->sender;
+        $sms->type        = $request->type;
+        $sms->sms_format  = $request->sms_format;
 
-    // Template update - FIXED: Use templates_json from request
-    if ($request->has('templates_json')) {
-        $sms->templates_json = $request->templates_json;
-    } else {
-        // Fallback for old format compatibility
-        $sms->templates_json = [
-            'pending'    => $request->pending_template ?? $sms->templates_json['pending'] ?? null,
-            'processing' => $request->processing_template ?? $sms->templates_json['processing'] ?? null,
-            'shipped'    => $request->shipped_template ?? $sms->templates_json['shipped'] ?? null,
-            'delivered'  => $request->delivered_template ?? $sms->templates_json['delivered'] ?? null,
-            'completed'  => $request->completed_template ?? $sms->templates_json['completed'] ?? null,
-            'cancelled'  => $request->cancelled_template ?? $sms->templates_json['cancelled'] ?? null,
-            'default'    => $request->sms_text ?? $request->default_template ?? $sms->templates_json['default'] ?? null,
-        ];
-    }
+        // Template update - FIXED: Use templates_json from request
+        if ($request->has('templates_json')) {
+            $sms->templates_json = $request->templates_json;
+        } else {
+            // Fallback for old format compatibility
+            $sms->templates_json = [
+                'pending'    => $request->pending_template ?? $sms->templates_json['pending'] ?? null,
+                'processing' => $request->processing_template ?? $sms->templates_json['processing'] ?? null,
+                'shipped'    => $request->shipped_template ?? $sms->templates_json['shipped'] ?? null,
+                'delivered'  => $request->delivered_template ?? $sms->templates_json['delivered'] ?? null,
+                'completed'  => $request->completed_template ?? $sms->templates_json['completed'] ?? null,
+                'cancelled'  => $request->cancelled_template ?? $sms->templates_json['cancelled'] ?? null,
+                'default'    => $request->sms_text ?? $request->default_template ?? $sms->templates_json['default'] ?? null,
+            ];
+        }
 
-    // Remove empty values
-    $sms->templates_json = array_filter($sms->templates_json, function ($value) {
-        return $value !== null && $value !== '';
-    });
+        // Remove empty values
+        $sms->templates_json = array_filter($sms->templates_json, function ($value) {
+            return $value !== null && $value !== '';
+        });
 
-    $sms->save();
+        $sms->save();
 
-    // Update .env file
-    if ($request->filled('api_key') || $request->filled('sender_id')) {
-        $this->updateEnv([
-            'SMS_API_KEY'   => $request->api_key,
-            'SMS_SENDER_ID' => $request->sender_id,
+        // Update .env file
+        if ($request->filled('api_key') || $request->filled('sender_id')) {
+            $this->updateEnv([
+                'SMS_API_KEY'   => $request->api_key,
+                'SMS_SENDER_ID' => $request->sender_id,
+            ]);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Configuration Updated Successfully',
+            'data'    => [
+                'basic' => $sms->only(['api_key', 'sender_id', 'sender', 'type', 'sms_format']),
+                'templates' => $sms->templates_json
+            ]
         ]);
     }
-
-    return response()->json([
-        'status'  => true,
-        'message' => 'Configuration Updated Successfully',
-        'data'    => [
-            'basic' => $sms->only(['api_key', 'sender_id', 'sender', 'type', 'sms_format']),
-            'templates' => $sms->templates_json
-        ]
-    ]);
-}
     private function updateEnv($data = [])
     {
         $envPath = base_path('.env');

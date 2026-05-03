@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Frontend\AdminUser\AdminUserController;
 use App\Http\Controllers\Api\Frontend\Blog\BlogController;
 use App\Http\Controllers\Api\Frontend\categoryController;
 use App\Http\Controllers\Api\Frontend\CheckRedmeeCodeController;
+use App\Http\Controllers\Api\Frontend\ContactUsController;
 use App\Http\Controllers\Api\Frontend\FaqController;
 use App\Http\Controllers\Api\Frontend\FestiveAlbum\FestiveAlbumController;
 use App\Http\Controllers\Api\Frontend\Gallery\GalleryController;
@@ -197,6 +198,10 @@ Route::controller(BlogController::class)->group(function () {
     Route::post('update-blogs/{id}', 'updateBlogs');
     Route::get('/get-blogs', 'blogs');
     Route::delete('/delete-blogs/{id}', 'deleteBlogs');
+});
+
+Route::controller(ContactUsController::class,)->group(function () {
+    Route::post('/contact-submit', 'contactSubmit');
 });
 
 
