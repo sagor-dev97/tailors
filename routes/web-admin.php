@@ -319,7 +319,12 @@ Route::controller(SettingController::class)->group(function () {
     Route::get('setting/general', 'index')->name('setting.general.index');
     Route::get('setting/sms', 'smsConfiguration')->name('setting.sms.configuration');
     Route::patch('setting/general', 'update')->name('setting.general.update');
+    Route::post('/sms-service-toggle', 'toggleService')->name('setting.sms.service.toggle');
+    Route::post('/sms-setting/update', 'updateKey')->name('setting.sms.update');
+    Route::post('/sms/update-templates', 'updateTemplates')->name('api.sms.update-templates');
 });
+
+
 
 //! Route for Logo Settings
 Route::controller(LogoController::class)->group(function () {
