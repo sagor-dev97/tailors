@@ -176,7 +176,9 @@ Route::controller(AdminUserController::class)->group(function () {
 
 Route::controller(OrderController::class)->group(function () {
     Route::post('/order', 'store');
-    Route::post('/re-order/{id}', 'reOrder');
+    Route::get('/reorder-details/{id}', 'reorderDetails');
+    
+    Route::post('/re-order/{orderId}', 'reOrder');
     Route::post('/order-update/{id}', 'update');
     Route::get('/orderData', 'getOrderData');
     Route::get('/user-orderdata', 'UsersOrderData');

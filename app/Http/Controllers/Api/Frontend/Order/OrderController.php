@@ -363,10 +363,17 @@ class OrderController extends Controller
         }
     }
 
+    public function reorderDetails($id)
+    {
+        $order = Order::with('detail','customer')->findOrFail($id);
 
+        return response()->json([
+            'status' => true,
+            'data' => $order
+        ]);
+    }
 
-
-    public function reOrder($orderId)
+    public function reOrder(Request $request, $orderId)
     {
         DB::beginTransaction();
 
@@ -380,10 +387,10 @@ class OrderController extends Controller
                 ], 401);
             }
 
-            // Get old order with relations
+            // Get old order
             $oldOrder = Order::with(['detail', 'customer'])
                 ->where('id', $orderId)
-                ->where('user_id', $authUser->id) // सुरक्षा: only own order
+                ->where('user_id', $authUser->id)
                 ->first();
 
             if (!$oldOrder) {
@@ -395,40 +402,75 @@ class OrderController extends Controller
 
             /*
         |----------------------------------------
-        | 1️⃣ Duplicate Customer
+        | 1️⃣ Create Customer (Editable)
         |----------------------------------------
         */
             $customer = Customer::create([
-                'name'     => $oldOrder->customer->name,
-                'address'  => $oldOrder->customer->address,
-                'phone'    => $oldOrder->customer->phone,
-                'receiver' => $oldOrder->customer->receiver,
+                'name'     => $request->name ?? $oldOrder->customer->name,
+                'address'  => $request->address ?? $oldOrder->customer->address,
+                'phone'    => $request->phone ?? $oldOrder->customer->phone,
+                'receiver' => $request->receiver ?? $oldOrder->customer->receiver,
             ]);
 
             /*
         |----------------------------------------
-        | 2️⃣ Create New Order
+        | 2️⃣ Create New Order (WITH FLAG)
         |----------------------------------------
         */
             $newOrder = Order::create([
-                'user_id'       => $authUser->id,
-                'customer_id'   => $customer->id,
-                'receiver'      => $oldOrder->receiver,
-                'order_number'  => 'ORD-' . time(),
-                'order_date'    => now(),
-                'delivery_date' => $oldOrder->delivery_date,
-                'status'        => 'pending',
+                'user_id'         => $authUser->id,
+                'customer_id'     => $customer->id,
+                'receiver'        => $request->receiver ?? $oldOrder->receiver,
+                'order_number'    => 'ORD-' . time(),
+                'order_date'      => now(),
+                'delivery_date'   => $request->delivery_date ?? $oldOrder->delivery_date,
+                'status'          => 'pending',
+                'is_reorder'      => true, // ✅ FLAG
+                'parent_order_id' => $oldOrder->id, // ✅ LINK
             ]);
 
             /*
         |----------------------------------------
-        | 3️⃣ Copy Order Details
+        | 3️⃣ Copy + Edit Order Details
         |----------------------------------------
         */
             $oldDetail = $oldOrder->detail;
 
-            $newDetail = $oldDetail->replicate(); // 🔥 easiest way
+            $newDetail = $oldDetail->replicate();
             $newDetail->order_id = $newOrder->id;
+
+            // 👉 Editable fields override (example)
+            $fields = $oldDetail->getAttributes();
+
+            foreach ($fields as $key => $value) {
+                if (in_array($key, ['id', 'order_id', 'created_at', 'updated_at'])) {
+                    continue;
+                }
+
+                if ($request->has($key)) {
+                    $newDetail->$key = $request->$key;
+                }
+            }
+
+            /*
+        |----------------------------------------
+        | 4️⃣ Recalculate Amount (IMPORTANT)
+        |----------------------------------------
+        */
+            $total =
+                ($newDetail->fabric_qty * $newDetail->fabric_price) +
+                ($newDetail->labor_qty * $newDetail->labor_price) +
+                ($newDetail->design_qty * $newDetail->design_price) +
+                ($newDetail->button_qty * $newDetail->button_price) +
+                ($newDetail->embroidery_qty * $newDetail->embroidery_price) +
+                ($newDetail->courier_qty * $newDetail->courier_price);
+
+            $advance = $request->advance ?? $oldDetail->advance;
+
+            $newDetail->total   = $total;
+            $newDetail->advance = $advance;
+            $newDetail->due     = $total - $advance;
+
             $newDetail->save();
 
             DB::commit();
@@ -447,6 +489,89 @@ class OrderController extends Controller
             ]);
         }
     }
+
+
+    // public function reOrder($orderId)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $authUser = auth('api')->user();
+
+    //         if (!$authUser) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Unauthorized'
+    //             ], 401);
+    //         }
+
+    //         // Get old order with relations
+    //         $oldOrder = Order::with(['detail', 'customer'])
+    //             ->where('id', $orderId)
+    //             ->where('user_id', $authUser->id) // सुरक्षा: only own order
+    //             ->first();
+
+    //         if (!$oldOrder) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Order not found'
+    //             ], 404);
+    //         }
+
+    //         /*
+    //     |----------------------------------------
+    //     | 1️⃣ Duplicate Customer
+    //     |----------------------------------------
+    //     */
+    //         $customer = Customer::create([
+    //             'name'     => $oldOrder->customer->name,
+    //             'address'  => $oldOrder->customer->address,
+    //             'phone'    => $oldOrder->customer->phone,
+    //             'receiver' => $oldOrder->customer->receiver,
+    //         ]);
+
+    //         /*
+    //     |----------------------------------------
+    //     | 2️⃣ Create New Order
+    //     |----------------------------------------
+    //     */
+    //         $newOrder = Order::create([
+    //             'user_id'       => $authUser->id,
+    //             'customer_id'   => $customer->id,
+    //             'receiver'      => $oldOrder->receiver,
+    //             'order_number'  => 'ORD-' . time(),
+    //             'order_date'    => now(),
+    //             'delivery_date' => $oldOrder->delivery_date,
+    //             'status'        => 'pending',
+    //         ]);
+
+    //         /*
+    //     |----------------------------------------
+    //     | 3️⃣ Copy Order Details
+    //     |----------------------------------------
+    //     */
+    //         $oldDetail = $oldOrder->detail;
+
+    //         $newDetail = $oldDetail->replicate(); // 🔥 easiest way
+    //         $newDetail->order_id = $newOrder->id;
+    //         $newDetail->save();
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'status'  => true,
+    //             'message' => 'Reorder created successfully',
+    //             'data'    => $newOrder
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $e->getMessage()
+    //         ]);
+    //     }
+    // }
 
 
     public function getOrderData()
@@ -977,171 +1102,169 @@ class OrderController extends Controller
     // }
 
     public function updateOrderStatus(Request $request, $id)
-{
-    $user = auth('api')->user();
+    {
+        $user = auth('api')->user();
 
-    if (!$user) {
-        return response()->json([
-            'status'  => false,
-            'code'    => 401,
-            'message' => 'Unauthorized',
-        ], 401);
-    }
-
-    $request->validate([
-        'status' => 'required|string|in:pending,processing,completed,cancelled,shipped,delivered'
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $order = Order::with('customer')->find($id);
-
-        if (!$order) {
-            DB::rollBack();
-
+        if (!$user) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Order not found',
-            ], 404);
+                'code'    => 401,
+                'message' => 'Unauthorized',
+            ], 401);
         }
 
-        // Duplicate status check
-        if ($order->status === $request->status) {
-            DB::rollBack();
-
-            return response()->json([
-                'status'  => false,
-                'message' => 'Status already ' . $request->status,
-            ], 400);
-        }
-
-        // ===============================
-        // UPDATE ORDER STATUS FIRST
-        // ===============================
-        $order->update([
-            'status' => $request->status
+        $request->validate([
+            'status' => 'required|string|in:pending,processing,completed,cancelled,shipped,delivered'
         ]);
 
-        $smsWarning = null;
+        DB::beginTransaction();
 
-        // ===============================
-        // SMS SETTINGS CHECK
-        // ===============================
-        $smsSetting = SmsSetting::first();
+        try {
+            $order = Order::with('customer')->find($id);
 
-        // No settings found
-        if (!$smsSetting) {
+            if (!$order) {
+                DB::rollBack();
 
-            $smsWarning = 'Order updated successfully, but SMS settings not found.';
-        }
-        // Service disabled
-        elseif ($smsSetting->service_status != 1) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Order not found',
+                ], 404);
+            }
 
-            $smsWarning = 'Order updated successfully, but SMS service is disabled.';
-        }
-        // API key or sender id missing
-        elseif (empty($smsSetting->api_key) || empty($smsSetting->sender_id)) {
+            // Duplicate status check
+            if ($order->status === $request->status) {
+                DB::rollBack();
 
-            $smsWarning = 'Order updated successfully, but API Key or Sender ID not found.';
-        } else {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Status already ' . $request->status,
+                ], 400);
+            }
 
             // ===============================
-            // PHONE CHECK
+            // UPDATE ORDER STATUS FIRST
             // ===============================
-            $phone = $order->customer->phone ?? null;
+            $order->update([
+                'status' => $request->status
+            ]);
 
-            if (!$phone) {
+            $smsWarning = null;
 
-                $smsWarning = 'Order updated successfully, but customer phone not found.';
+            // ===============================
+            // SMS SETTINGS CHECK
+            // ===============================
+            $smsSetting = SmsSetting::first();
+
+            // No settings found
+            if (!$smsSetting) {
+
+                $smsWarning = 'Order updated successfully, but SMS settings not found.';
+            }
+            // Service disabled
+            elseif ($smsSetting->service_status != 1) {
+
+                $smsWarning = 'Order updated successfully, but SMS service is disabled.';
+            }
+            // API key or sender id missing
+            elseif (empty($smsSetting->api_key) || empty($smsSetting->sender_id)) {
+
+                $smsWarning = 'Order updated successfully, but API Key or Sender ID not found.';
             } else {
 
                 // ===============================
-                // TEMPLATE
+                // PHONE CHECK
                 // ===============================
-                $templates = $smsSetting->templates_json ?? [];
+                $phone = $order->customer->phone ?? null;
 
-                $template = $templates[$request->status]
-                    ?? ($templates['default'] ?? $smsSetting->sms_text);
+                if (!$phone) {
 
-                if (!empty($template)) {
-
-                    $banglaStatus = [
-                        'pending'    => 'অপেক্ষমান',
-                        'processing' => 'প্রক্রিয়াধীন',
-                        'shipped'    => 'পাঠানো হয়েছে',
-                        'delivered'  => 'ডেলিভারি হয়েছে',
-                        'completed'  => 'সম্পন্ন হয়েছে',
-                        'cancelled'  => 'বাতিল করা হয়েছে'
-                    ];
-
-                    $message = str_replace(
-                        [
-                            '{company}',
-                            '{order_number}',
-                            '{status}',
-                            '{bangla_status}',
-                            '{customer_name}',
-                            '{customer_phone}',
-                            '{order_date}',
-                            '{total_amount}',
-                            '{payment_method}',
-                            '{delivery_address}'
-                        ],
-                        [
-                            $smsSetting->sender ?? 'Our Company',
-                            $order->order_number,
-                            $request->status,
-                            $banglaStatus[$request->status] ?? $request->status,
-                            $order->customer->name ?? 'Customer',
-                            $order->customer->phone ?? '',
-                            $order->created_at
-                                ? $order->created_at->format('d/m/Y')
-                                : date('d/m/Y'),
-                            $order->total_amount ?? '0',
-                            $order->payment_method ?? 'Cash On Delivery',
-                            $order->delivery_address ?? ''
-                        ],
-                        $template
-                    );
-
-                    $message = strip_tags($message);
-
-                    $smsSent = $this->sendSms($phone, $message, $order->id);
-
-                    if (!$smsSent) {
-                        $smsWarning = 'Order updated successfully, but SMS sending failed.';
-                    }
+                    $smsWarning = 'Order updated successfully, but customer phone not found.';
                 } else {
 
-                    $smsWarning = 'Order updated successfully, but SMS template not found.';
+                    // ===============================
+                    // TEMPLATE
+                    // ===============================
+                    $templates = $smsSetting->templates_json ?? [];
+
+                    $template = $templates[$request->status]
+                        ?? ($templates['default'] ?? $smsSetting->sms_text);
+
+                    if (!empty($template)) {
+
+                        $banglaStatus = [
+                            'pending'    => 'অপেক্ষমান',
+                            'processing' => 'প্রক্রিয়াধীন',
+                            'shipped'    => 'পাঠানো হয়েছে',
+                            'delivered'  => 'ডেলিভারি হয়েছে',
+                            'completed'  => 'সম্পন্ন হয়েছে',
+                            'cancelled'  => 'বাতিল করা হয়েছে'
+                        ];
+
+                        $message = str_replace(
+                            [
+                                '{company}',
+                                '{order_number}',
+                                '{status}',
+                                '{bangla_status}',
+                                '{customer_name}',
+                                '{customer_phone}',
+                                '{order_date}',
+                                '{total_amount}',
+                                '{payment_method}',
+                                '{delivery_address}'
+                            ],
+                            [
+                                $smsSetting->sender ?? 'Our Company',
+                                $order->order_number,
+                                $request->status,
+                                $banglaStatus[$request->status] ?? $request->status,
+                                $order->customer->name ?? 'Customer',
+                                $order->customer->phone ?? '',
+                                $order->created_at
+                                    ? $order->created_at->format('d/m/Y')
+                                    : date('d/m/Y'),
+                                $order->total_amount ?? '0',
+                                $order->payment_method ?? 'Cash On Delivery',
+                                $order->delivery_address ?? ''
+                            ],
+                            $template
+                        );
+
+                        $message = strip_tags($message);
+
+                        $smsSent = $this->sendSms($phone, $message, $order->id);
+
+                        if (!$smsSent) {
+                            $smsWarning = 'Order updated successfully, but SMS sending failed.';
+                        }
+                    } else {
+
+                        $smsWarning = 'Order updated successfully, but SMS template not found.';
+                    }
                 }
             }
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => true,
+                'message' => $smsWarning ?? 'SMS sent & order updated successfully.',
+                'data'    => $order
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('ORDER ERROR', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'status'  => true,
-            'message' => $smsWarning ?? 'SMS sent & order updated successfully.',
-            'data'    => $order
-        ]);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        Log::error('ORDER ERROR', [
-            'error' => $e->getMessage(),
-        ]);
-
-        return response()->json([
-            'status'  => false,
-            'message' => $e->getMessage(),
-        ], 500);
     }
-}
-
 }
 
 
