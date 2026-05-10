@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\Frontend\Wishlist\WishlistController;
 use App\Http\Controllers\Api\Gateway\Stripe\StripeOnBoardingController;
 use App\Http\Controllers\Api\InAppPurchase\InAppPurchaseController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\Payment\PaymentController;
 use App\Models\BoostingPayment;
 use Illuminate\Support\Facades\Route;
 
@@ -206,4 +207,10 @@ Route::controller(ContactUsController::class,)->group(function () {
     Route::post('/contact-submit', 'contactSubmit');
 });
 
+
+Route::post('/payment/create', [PaymentController::class, 'pay'])->name('payment.create');
+
+Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
