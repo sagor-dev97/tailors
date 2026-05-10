@@ -25,8 +25,8 @@ class OrderController extends Controller
 
         try {
 
-            $user = auth('api')->user();
-            if (!$user) {
+            $authUser = auth('api')->user();
+            if (!$authUser) {
                 return response()->json([
                     'status'  => false,
                     'code'    => 401,
@@ -80,7 +80,7 @@ class OrderController extends Controller
 
 
             $order = Order::create([
-                'user_id'       => $user->id,
+                'user_id'       => $authUser->id,
                 'customer_id'   => $customer->id,
                 'receiver'      => $request->receiver,
                 'order_number'  => 'ORD-' . time(),
@@ -393,7 +393,7 @@ class OrderController extends Controller
                 ->where('id', $orderId)
                 ->where('user_id', $authUser->id)
                 ->first();
-                dd($oldOrder);
+             
             if (!$oldOrder) {
                 return response()->json([
                     'status' => false,
