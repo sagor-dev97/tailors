@@ -185,7 +185,8 @@ class OrderController extends Controller
                 'status'  => true,
                 'code'   => 200,
                 'message' => 'Order created successfully',
-                'order_id' => $order->id
+                'order_id' => $order->id,
+                'user_id' => $order->user_id
             ]);
         } catch (\Exception $e) {
 
