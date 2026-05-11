@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-// use Illuminate\Support\Str;
+use Illuminate\Support\Str;
 use to;
 
 class OrderController extends Controller
@@ -366,7 +366,7 @@ class OrderController extends Controller
 
     public function reorderDetails($id)
     {
-        $order = Order::with('detail','customer')->findOrFail($id);
+        $order = Order::with('detail', 'customer')->findOrFail($id);
 
         return response()->json([
             'status' => true,
@@ -393,7 +393,7 @@ class OrderController extends Controller
                 ->where('id', $orderId)
                 ->where('user_id', $authUser->id)
                 ->first();
-             
+
             if (!$oldOrder) {
                 return response()->json([
                     'status' => false,
