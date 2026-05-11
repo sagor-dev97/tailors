@@ -13,6 +13,14 @@ class AdminUserController extends Controller
     {
         // Fetch all users with the 'manager' role
         $managers = User::role('manager')->get();
+        if ($managers->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'code' => 404,
+                'message' => 'Manager users not found',
+                'data' => [],
+            ]);
+        }
 
         // Return as a resource collection
         return response()->json([
