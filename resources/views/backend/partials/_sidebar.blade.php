@@ -117,7 +117,7 @@
                 <li>
                     <h3>CMS</h3>
                 </li>
-                <li class="slide">
+                {{-- <li class="slide">
                     <a class="side-menu__item {{ request()->routeIs('admin.page.*') ? 'has-link active' : '' }}"
                         href="{{ route('admin.page.index') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
@@ -126,7 +126,7 @@
                         </svg>
                         <span class="side-menu__label">Dynamic Page</span>
                     </a>
-                </li>
+                </li> --}}
 
                 <li class="slide">
                     <a class="side-menu__item" data-bs-toggle="slide" href="#">
