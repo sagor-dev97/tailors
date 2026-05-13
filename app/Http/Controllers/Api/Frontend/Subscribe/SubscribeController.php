@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api\Frontend\Subscribe;
 
-use Exception;
-use App\Models\Subscriber;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
+use App\Models\Subscriber;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class SubscribeController extends Controller
@@ -44,4 +45,26 @@ class SubscribeController extends Controller
             ]);
         }
     }
+
+    public function getContactCms()
+    {
+        $sttings = Setting::get();
+
+        if ($sttings->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => "Contact CMS not found",
+                'data' => [],
+                'code' => 404
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Contact CMS found",
+            'data' => $sttings,
+            'code' => 200
+        ]);
+    }
+
 }

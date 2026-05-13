@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\Frontend\Review\ReviewController;
 use App\Http\Controllers\Api\Frontend\SettingsController;
 use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubcategoryController;
+use App\Http\Controllers\Api\Frontend\Subscribe\SubscribeController;
 use App\Http\Controllers\Api\Frontend\SubscriberController;
 use App\Http\Controllers\Api\Frontend\Users\UsersListController;
 use App\Http\Controllers\Api\Frontend\Wishlist\WishlistController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\Api\InAppPurchase\InAppPurchaseController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Payment\PaymentController;
 use App\Models\BoostingPayment;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
 
 // health check
@@ -50,8 +52,8 @@ Route::get('/health-check', function () {
 });
 
 //page
-Route::get('/page/home', [HomeController::class, 'index']);
-Route::get('/social/links', [SocialLinksController::class, 'index']);
+Route::get('/page/about-us', [HomeController::class, 'index']);
+Route::get('/page/our-responsibility', [HomeController::class, 'ourResponsibility']);
 Route::get('/settings', [SettingsController::class, 'index']);
 Route::get('/faq', [FaqController::class, 'index']);
 
@@ -178,7 +180,7 @@ Route::controller(AdminUserController::class)->group(function () {
 Route::controller(OrderController::class)->group(function () {
     Route::post('/order', 'store');
     Route::get('/reorder-details/{id}', 'reorderDetails');
-    
+
     Route::post('/re-order/{orderId}', 'reOrder');
     Route::post('/order-update/{id}', 'update');
     Route::get('/orderData', 'getOrderData');
@@ -189,7 +191,7 @@ Route::controller(OrderController::class)->group(function () {
     Route::post('/update-order-status/{id}', 'UpdateOrderStatus');
 });
 
-Route::post('/update-profile',[UserController::class,'updateProfile']);
+Route::post('/update-profile', [UserController::class, 'updateProfile']);
 Route::controller(GalleryController::class)->group(function () {
     Route::post('/gallery', 'store');
     Route::post('update-gallery/{id}', 'updateGallery');
@@ -214,3 +216,4 @@ Route::get('/payment/success', [PaymentController::class, 'success'])->name('pay
 Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
 Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
+Route::get('/get-contact', [SubscribeController::class, 'getContactCms']);

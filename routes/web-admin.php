@@ -11,7 +11,6 @@ use App\Http\Controllers\Web\Backend\Boosting\BoostPlanController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\ChatController;
 use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeAboutController;
-use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeBannerController;
 use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeExampleController;
 use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeIntroController;
 use App\Http\Controllers\Web\Backend\CMS\Web\HowitWorks\HeroController;
@@ -60,9 +59,41 @@ use Illuminate\Support\Facades\Route;
 Route::get("dashboard", [DashboardController::class, 'index'])->name('dashboard');
 
 
-/*
-* CRUD
-*/
+Route::prefix('cms')->name('cms.')->group(function () {
+
+    //Home About
+    Route::prefix('home/about')->name('home.about.')->controller(HomeAboutController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}/show', 'show')->name('show');
+
+        Route::put('/content', 'content')->name('content');
+        Route::get('/display', 'display')->name('display');
+    });
+
+    //Home Example
+    Route::prefix('home/example')->name('home.example.')->controller(HomeExampleController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{id}/show', 'show')->name('show');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::patch('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::get('/{id}/status', 'status')->name('status');
+
+        Route::put('/content', 'content')->name('content');
+        Route::get('/display', 'display')->name('display');
+    });
+
+    //Home Intro
+    Route::prefix('home/intro')->name('home.intro.')->controller(HomeIntroController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}/show', 'show')->name('show');
+
+        Route::put('/content', 'content')->name('content');
+        Route::get('/display', 'display')->name('display');
+    });
+});
 
 Route::controller(MenuController::class)->prefix('menu')->name('menu.')->group(function () {
     Route::get('/', 'index')->name('index');
