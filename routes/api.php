@@ -45,6 +45,7 @@ use App\Http\Controllers\Api\Payment\PaymentController;
 use App\Models\BoostingPayment;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Frontend\Search\CustomerSearchController;
 
 // health check
 Route::get('/health-check', function () {
@@ -191,6 +192,7 @@ Route::controller(OrderController::class)->group(function () {
     Route::post('/update-order-status/{id}', 'UpdateOrderStatus');
 });
 
+Route::get('/search-order', [CustomerSearchController::class, 'SearchCustomerReport']);
 Route::post('/update-profile', [UserController::class, 'updateProfile']);
 Route::controller(GalleryController::class)->group(function () {
     Route::post('/gallery', 'store');
