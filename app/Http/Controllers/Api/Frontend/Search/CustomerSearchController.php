@@ -24,6 +24,14 @@ class CustomerSearchController extends Controller
                 $q->where('phone_number', $phone);
             });
         }
+        if ($request->filled('order_number')) {
+
+            $order_number = $request->order_number;
+
+            $query->whereHas('user', function ($q) use ($order_number) {
+                $q->where('order_number', $order_number);
+            });
+        }
 
         // From Date & To Date filter
         if ($request->filled('from_date') && $request->filled('to_date')) {
