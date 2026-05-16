@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Frontend\Subscribe;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SettingResource;
 use App\Models\Setting;
 use App\Models\Subscriber;
 use Exception;
@@ -35,7 +36,6 @@ class SubscribeController extends Controller
                 'data' => $subscriber,
                 'code' => 200
             ]);
-            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -61,10 +61,9 @@ class SubscribeController extends Controller
 
         return response()->json([
             'success' => true,
+            'code' => 200,
             'message' => "Contact CMS found",
-            'data' => $sttings,
-            'code' => 200
+            'data' => new SettingResource($sttings->first()),
         ]);
     }
-
 }
