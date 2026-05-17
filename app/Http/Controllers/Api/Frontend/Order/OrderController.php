@@ -201,7 +201,7 @@ class OrderController extends Controller
 
                 if ($phone) {
 
-                    $message = "প্রিয় গ্রাহক,\n"
+                    $message = "প্রিয় গ্রাহক, আপনার অর্ডার সফলভাবে গ্রহণ করা হয়েছে।\n"
                         . "অর্ডার আইডি: {$order->order_number}\n"
                         . "আপনার মোট টাকা: {$request->total} টাকা\n"
                         . "পরিশোধ: {$request->advance} টাকা\n"

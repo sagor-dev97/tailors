@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use Exception;
-use Carbon\Carbon;
-use App\Traits\SMS;
-use App\Models\User;
-use App\Mail\OtpMail;
+use App\Events\RegistrationNotificationEvent;
 use App\Helpers\Helper;
 use App\Helpers\PhoneHelper;
+use App\Http\Controllers\Controller;
+use App\Mail\OtpMail;
+use App\Models\SmsSetting;
+use App\Models\User;
+use App\Notifications\RegistrationNotification;
+use App\Traits\SMS;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Events\RegistrationNotificationEvent;
-use App\Notifications\RegistrationNotification;
 
 class RegisterController extends Controller
 {
@@ -31,96 +34,294 @@ class RegisterController extends Controller
         $this->showSelect = ['id', 'name', 'username', 'phone_number', 'email', 'avatar'];
     }
 
+    // public function register(Request $request)
+    // {
+    //     $request->validate([
+    //         'name'         => 'required|string|max:255',
+    //         'address'      => 'required|string|max:255',
+    //         'password'     => 'required|string|min:6|confirmed',
+    //         'phone_number' => 'required|string|max:15|unique:users,phone_number',
+    //     ]);
+
+    //     try {
+    //         DB::beginTransaction();
+
+    //         // Generate unique slug
+    //         do {
+    //             $slug = 'user_' . rand(1000000000, 9999999999);
+    //         } while (User::where('slug', $slug)->exists());
+
+    //         // Generate username
+    //         function randomAlphaNum($length = 4)
+    //         {
+    //             return substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, $length);
+    //         }
+
+    //         $username = '@user_' . randomAlphaNum(4);
+
+    //         // Create user (AUTO VERIFIED, NO OTP)
+    //         $user = User::create([
+    //             'username'           => $username,
+    //             'slug'               => $slug,
+    //             'name'               => $request->name,
+    //             'address'            => $request->address,
+    //             'phone_number'       => $request->phone_number,
+    //             'password'           => Hash::make($request->password),
+
+    //             // auto verified
+    //             'otp'                => null,
+    //             'otp_verified_at'    => Carbon::now(),
+
+    //             'status'             => 'active',
+    //             'last_activity_at'   => Carbon::now(),
+    //         ]);
+
+    //         // Assign role (user)
+    //         DB::table('model_has_roles')->insert([
+    //             'role_id'    => 4,
+    //             'model_type' => 'App\Models\User',
+    //             'model_id'   => $user->id,
+    //         ]);
+
+    //         // Notify admins
+    //         $notiData = [
+    //             'user_id' => $user->id,
+    //             'title'   => 'New user registered',
+    //             'body'    => 'A new user has registered successfully.',
+    //         ];
+
+    //         $admins = User::role('admin', 'web')->get();
+    //         foreach ($admins as $admin) {
+    //             $admin->notify(new RegistrationNotification($notiData));
+
+    //             if (config('settings.reverb') === 'on') {
+    //                 broadcast(
+    //                     new RegistrationNotificationEvent($notiData, $admin->id)
+    //                 )->toOthers();
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         // Login user instantly
+    //         $token = auth('api')->login($user);
+
+    //         return response()->json([
+    //             'status'  => true,
+    //             'message' => 'User registered successfully.',
+    //             'token'   => $token,
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return Helper::jsonErrorResponse(
+    //             'User registration failed',
+    //             500,
+    //             [$e->getMessage()]
+    //         );
+    //     }
+    // }
+
+
     public function register(Request $request)
-    {
-        $request->validate([
-            'name'         => 'required|string|max:255',
-            'address'      => 'required|string|max:255',
-            'password'     => 'required|string|min:6|confirmed',
-            'phone_number' => 'required|string|max:15|unique:users,phone_number',
-        ]);
+{
+    $request->validate([
+        'name'         => 'required|string|max:255',
+        'address'      => 'required|string|max:255',
+        'password'     => 'required|string|min:6|confirmed',
+        'phone_number' => 'required|string|max:15|unique:users,phone_number',
+    ]);
 
-        try {
-            DB::beginTransaction();
+    try {
 
-            // Generate unique slug
-            do {
-                $slug = 'user_' . rand(1000000000, 9999999999);
-            } while (User::where('slug', $slug)->exists());
+        DB::beginTransaction();
 
-            // Generate username
-            function randomAlphaNum($length = 4)
-            {
-                return substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, $length);
-            }
+        // Generate unique slug
+        do {
+            $slug = 'user_' . rand(1000000000, 9999999999);
+        } while (User::where('slug', $slug)->exists());
 
-            $username = '@user_' . randomAlphaNum(4);
-
-            // Create user (AUTO VERIFIED, NO OTP)
-            $user = User::create([
-                'username'           => $username,
-                'slug'               => $slug,
-                'name'               => $request->name,
-                'address'            => $request->address,
-                'phone_number'       => $request->phone_number,
-                'password'           => Hash::make($request->password),
-
-                // auto verified
-                'otp'                => null,
-                'otp_verified_at'    => Carbon::now(),
-
-                'status'             => 'active',
-                'last_activity_at'   => Carbon::now(),
-            ]);
-
-            // Assign role (user)
-            DB::table('model_has_roles')->insert([
-                'role_id'    => 4,
-                'model_type' => 'App\Models\User',
-                'model_id'   => $user->id,
-            ]);
-
-            // Notify admins
-            $notiData = [
-                'user_id' => $user->id,
-                'title'   => 'New user registered',
-                'body'    => 'A new user has registered successfully.',
-            ];
-
-            $admins = User::role('admin', 'web')->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new RegistrationNotification($notiData));
-
-                if (config('settings.reverb') === 'on') {
-                    broadcast(
-                        new RegistrationNotificationEvent($notiData, $admin->id)
-                    )->toOthers();
-                }
-            }
-
-            DB::commit();
-
-            // Login user instantly
-            $token = auth('api')->login($user);
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'User registered successfully.',
-                'token'   => $token,
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return Helper::jsonErrorResponse(
-                'User registration failed',
-                500,
-                [$e->getMessage()]
+        // Generate username
+        function randomAlphaNum($length = 4)
+        {
+            return substr(
+                str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'),
+                0,
+                $length
             );
         }
+
+        $username = '@user_' . randomAlphaNum(4);
+
+        // ===============================
+        // CREATE USER
+        // ===============================
+        $user = User::create([
+            'username'           => $username,
+            'slug'               => $slug,
+            'name'               => $request->name,
+            'address'            => $request->address,
+            'phone_number'       => $request->phone_number,
+            'password'           => Hash::make($request->password),
+
+            // auto verified
+            'otp'                => null,
+            'otp_verified_at'    => Carbon::now(),
+
+            'status'             => 'active',
+            'last_activity_at'   => Carbon::now(),
+        ]);
+
+        // ===============================
+        // ASSIGN ROLE
+        // ===============================
+        DB::table('model_has_roles')->insert([
+            'role_id'    => 4,
+            'model_type' => 'App\Models\User',
+            'model_id'   => $user->id,
+        ]);
+
+        // ===============================
+        // ADMIN NOTIFICATION
+        // ===============================
+        $notiData = [
+            'user_id' => $user->id,
+            'title'   => 'New user registered',
+            'body'    => 'A new user has registered successfully.',
+        ];
+
+        $admins = User::role('admin', 'web')->get();
+
+        foreach ($admins as $admin) {
+
+            $admin->notify(new RegistrationNotification($notiData));
+
+            if (config('settings.reverb') === 'on') {
+
+                broadcast(
+                    new RegistrationNotificationEvent($notiData, $admin->id)
+                )->toOthers();
+            }
+        }
+
+        // ===============================
+        // SEND WELCOME SMS
+        // ===============================
+        $smsWarning = null;
+
+        $smsSetting = SmsSetting::first();
+
+        if (!$smsSetting) {
+
+            $smsWarning = 'SMS settings not found.';
+        }
+        elseif ($smsSetting->service_status != 1) {
+
+            $smsWarning = 'SMS service disabled.';
+        }
+        elseif (empty($smsSetting->api_key) || empty($smsSetting->sender_id)) {
+
+            $smsWarning = 'API Key or Sender ID missing.';
+        }
+        else {
+
+            $phone = $user->phone_number;
+
+            if ($phone) {
+
+                $message = "আপনাকে ঢাকা টেইলার্স এ স্বাগতম।\n"
+                    . "আপনি এখন আপনার পছন্দমতো অর্ডার করতে পারেন।\n"
+                    . "ধন্যবাদ,\n"
+                    . "ঢাকা টেইলার্স";
+
+                $smsSent = $this->sendSms($phone, $message, null);
+
+                if (!$smsSent) {
+
+                    $smsWarning = 'SMS sending failed.';
+                }
+            } else {
+
+                $smsWarning = 'Phone number not found.';
+            }
+        }
+
+        DB::commit();
+
+        // ===============================
+        // LOGIN USER
+        // ===============================
+        $token = auth('api')->login($user);
+
+        return response()->json([
+            'status'  => true,
+            'message' => $smsWarning
+                ? 'User registered successfully, but ' . $smsWarning
+                : 'User registered & welcome SMS sent successfully.',
+            'token'   => $token,
+        ], 200);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return Helper::jsonErrorResponse(
+            'User registration failed',
+            500,
+            [$e->getMessage()]
+        );
     }
+}
 
+     private function sendSms($phone, $message, $orderId)
+    {
+        try {
+            // ফোন নাম্বার ক্লিন করা
+            $phone = preg_replace('/[^0-9]/', '', $phone);
 
+            // ডাটাবেজ থেকে API সেটিংস নেওয়া
+            $smsSetting = SmsSetting::first();
 
+            $apiKey = $smsSetting->api_key ?? env('SMS_API_KEY');
+            $senderId = $smsSetting->sender_id ?? env('SMS_SENDER_ID');
+
+            $response = Http::timeout(10)->get('https://api.automas.com.bd/smsapiv3', [
+                'apikey'  => $apiKey,
+                'sender'  => $senderId,
+                'msisdn'  => $phone,
+                'smstext' => $message,
+            ]);
+
+            // রেসপন্স চেক করা
+            if (!$response->successful()) {
+                Log::warning('SMS API failed', ['order_id' => $orderId]);
+                return false;
+            }
+
+            $data = $response->json();
+
+            // স্ট্যাটাস চেক করা
+            $status = $data['response'][0]['status'] ?? null;
+
+            if ($status === null) {
+                Log::error('Invalid SMS response', ['order_id' => $orderId, 'data' => $data]);
+                return false;
+            }
+
+            Log::info('SMS RESPONSE', [
+                'order_id' => $orderId,
+                'status' => $status,
+            ]);
+
+            return $status === 0;
+        } catch (\Exception $e) {
+            Log::error('SMS ERROR', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
 
     public function VerifyEmail(Request $request)
     {
