@@ -19,6 +19,7 @@ return new class extends Migration
                 'canceled',
                 'shipped',
                 'delivered',
+                'ready',
                 'returned',
                 'failed',
                 'in_courier',

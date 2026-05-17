@@ -1115,7 +1115,7 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|string|in:pending,processing,completed,cancelled,shipped,delivered'
+            'status' => 'required|string|'
         ]);
 
         DB::beginTransaction();
