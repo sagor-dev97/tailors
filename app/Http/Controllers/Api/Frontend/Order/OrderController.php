@@ -179,14 +179,58 @@ class OrderController extends Controller
             ]);
 
 
+            // ===============================
+            // SEND SMS AFTER ORDER CREATE
+            // ===============================
+            $smsWarning = null;
+
+            $smsSetting = SmsSetting::first();
+
+            if (!$smsSetting) {
+
+                $smsWarning = 'SMS settings not found.';
+            } elseif ($smsSetting->service_status != 1) {
+
+                $smsWarning = 'SMS service disabled.';
+            } elseif (empty($smsSetting->api_key) || empty($smsSetting->sender_id)) {
+
+                $smsWarning = 'API Key or Sender ID missing.';
+            } else {
+
+                $phone = $customer->phone ?? null;
+
+                if ($phone) {
+
+                    $message = "প্রিয় গ্রাহক,\n"
+                        . "অর্ডার আইডি: {$order->order_number}\n"
+                        . "আপনার মোট টাকা: {$request->total} টাকা\n"
+                        . "পরিশোধ: {$request->advance} টাকা\n"
+                        . "বাকি: {$request->due} টাকা\n\n"
+                        . "ঢাকা টেইলার্স\n"
+                        . "মোবাইল এবং বিকাশ: 01XXXXXXXXX";
+                    $smsSent = $this->sendSms($phone, $message, $order->id);
+
+                    if (!$smsSent) {
+                        $smsWarning = 'SMS sending failed.';
+                    }
+                } else {
+
+                    $smsWarning = 'Customer phone not found.';
+                }
+            }
+
+
             DB::commit();
 
             return response()->json([
                 'status'  => true,
                 'code'   => 200,
-                'message' => 'Order created successfully',
+              'message'  => $smsWarning
+                ? 'Order created successfully, but ' . $smsWarning
+                : 'Order created & SMS sent successfully.',
                 'order_id' => $order->id,
-                'user_id' => $order->user_id
+                'user_id' => $order->user_id,
+                'phone' => $customer->phone,
             ]);
         } catch (\Exception $e) {
 
@@ -1198,7 +1242,12 @@ class OrderController extends Controller
                             'shipped'    => 'পাঠানো হয়েছে',
                             'delivered'  => 'ডেলিভারি হয়েছে',
                             'completed'  => 'সম্পন্ন হয়েছে',
-                            'cancelled'  => 'বাতিল করা হয়েছে'
+                            'cancelled'  => 'বাতিল করা হয়েছে',
+                            'ready'      => 'ডেলিভারির জন্য রেডি',
+                            'in_courier'  => 'কুরিয়ার সার্ভিসে ডেলিভারি দেওয়া হয়েছে',
+                            'courier_payment_not'  => 'ডেলিভারি দেওয়া হয়েছে টাকা কিন্তু বাকি আছে',
+                            'payment_not'  => 'টাকা বাকি আছে'
+
                         ];
 
                         $message = str_replace(
