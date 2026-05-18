@@ -63,103 +63,103 @@ class UserController extends Controller
         ], 200);
     }
 
-// public function me(Request $request)
-// {
-//     $usrData = auth('api')->user();
+    // public function me(Request $request)
+    // {
+    //     $usrData = auth('api')->user();
 
-//     if (!$usrData) {
-//         return response()->json([
-//             'status'  => false,
-//             'message' => 'Unauthorized',
-//             'code'    => 401
-//         ]);
-//     }
+    //     if (!$usrData) {
+    //         return response()->json([
+    //             'status'  => false,
+    //             'message' => 'Unauthorized',
+    //             'code'    => 401
+    //         ]);
+    //     }
 
-//     /*
-//     |--------------------------------------------------------------------------
-//     | 🔐 Password Change Section (FIXED)
-//     |--------------------------------------------------------------------------
-//     */
-//     if (
-//         $request->filled('old_password') &&
-//         $request->filled('new_password') &&
-//         $request->filled('new_password_confirmation')
-//     ) {
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 🔐 Password Change Section (FIXED)
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     if (
+    //         $request->filled('old_password') &&
+    //         $request->filled('new_password') &&
+    //         $request->filled('new_password_confirmation')
+    //     ) {
 
-//         $request->validate([
-//             'old_password' => 'required',
-//             'new_password' => 'required|min:6|confirmed',
-//         ]);
+    //         $request->validate([
+    //             'old_password' => 'required',
+    //             'new_password' => 'required|min:6|confirmed',
+    //         ]);
 
-//         // Check old password
-//         if (!Hash::check($request->old_password, $usrData->password)) {
-//             return response()->json([
-//                 'status'  => false,
-//                 'message' => 'Old password is incorrect',
-//             ], 400);
-//         }
+    //         // Check old password
+    //         if (!Hash::check($request->old_password, $usrData->password)) {
+    //             return response()->json([
+    //                 'status'  => false,
+    //                 'message' => 'Old password is incorrect',
+    //             ], 400);
+    //         }
 
-//         // Update password
-//         $usrData->password = Hash::make($request->new_password);
-//         $usrData->save();
-//     }
+    //         // Update password
+    //         $usrData->password = Hash::make($request->new_password);
+    //         $usrData->save();
+    //     }
 
-//     /*
-//     |--------------------------------------------------------------------------
-//     | 👤 User Fetch
-//     |--------------------------------------------------------------------------
-//     */
-//     $user = User::select($this->select)->find(auth('api')->id());
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 👤 User Fetch
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $user = User::select($this->select)->find(auth('api')->id());
 
-//     if (!$user) {
-//         return response()->json([
-//             'status'  => false,
-//             'message' => 'User not found',
-//         ], 404);
-//     }
+    //     if (!$user) {
+    //         return response()->json([
+    //             'status'  => false,
+    //             'message' => 'User not found',
+    //         ], 404);
+    //     }
 
-//     // Get role name
-//     $role = $user->getRoleNames()->first();
+    //     // Get role name
+    //     $role = $user->getRoleNames()->first();
 
-//     // Convert to array & remove roles relation
-//     $userData = $user->toArray();
-//     unset($userData['roles']);
+    //     // Convert to array & remove roles relation
+    //     $userData = $user->toArray();
+    //     unset($userData['roles']);
 
-//     // Add single role
-//     $userData['role'] = $role;
+    //     // Add single role
+    //     $userData['role'] = $role;
 
-//     return response()->json([
-//         'status'  => true,
-//         'message' => 'User details fetched successfully',
-//         'data'    => $userData
-//     ], 200);
-// }
+    //     return response()->json([
+    //         'status'  => true,
+    //         'message' => 'User details fetched successfully',
+    //         'data'    => $userData
+    //     ], 200);
+    // }
 
 
-public function allUsers()
-{
-    $authUser = auth('api')->user();
+    public function allUsers()
+    {
+        $authUser = auth('api')->user();
 
-    if (!$authUser) {
-        return Helper::jsonResponse(false, 'Unauthorized', 401, null);
+        if (!$authUser) {
+            return Helper::jsonResponse(false, 'Unauthorized', 401, null);
+        }
+
+        // ✅ Only manager can access
+        if (!$authUser->hasRole('manager')) {
+            return Helper::jsonResponse(false, 'Forbidden: Only manager can access', 403, null);
+        }
+
+        // ✅ Get only users with role "user"
+        $users = User::role('user')
+            ->select($this->select)
+            ->get();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'User list fetched successfully',
+            'data'    => $users
+        ], 200);
     }
-
-    // ✅ Only manager can access
-    if (!$authUser->hasRole('manager')) {
-        return Helper::jsonResponse(false, 'Forbidden: Only manager can access', 403, null);
-    }
-
-    // ✅ Get only users with role "user"
-    $users = User::role('user')
-        ->select($this->select)
-        ->get();
-
-    return response()->json([
-        'status'  => true,
-        'message' => 'User list fetched successfully',
-        'data'    => $users
-    ], 200);
-}
 
 
 
@@ -215,105 +215,103 @@ public function allUsers()
     // }
 
     public function updateProfile(Request $request)
-{
-    $validatedData = $request->validate([
-        'name'         => 'nullable|string|max:255',
-        'address'      => 'nullable|string|max:255',
-        'phone_number' => 'nullable|string|max:2000',
-        'avatar'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+    {
+        $validatedData = $request->validate([
+            'name'         => 'nullable|string|max:255',
+            'address'      => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:2000',
+            'avatar'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
 
-        // Password fields (optional)
-        'old_password' => 'nullable',
-        'new_password' => 'nullable|min:6|confirmed',
-        // new_password_confirmation required if new_password given
-    ]);
+            // Password fields (optional)
+            'old_password' => 'nullable',
+            'new_password' => 'nullable|min:6|confirmed',
+            // new_password_confirmation required if new_password given
+        ]);
 
-    $user = auth('api')->user();
+        $user = auth('api')->user();
 
-    if (!$user) {
-        return Helper::jsonResponse(false, 'Unauthorized', 404, null);
-    }
+        if (!$user) {
+            return Helper::jsonResponse(false, 'Unauthorized', 404, null);
+        }
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        /*
+            /*
         |--------------------------------------------------------------------------
         | 🔐 PASSWORD CHANGE
         |--------------------------------------------------------------------------
         */
-        if ($request->filled('old_password') && $request->filled('new_password')) {
+            if ($request->filled('old_password') && $request->filled('new_password')) {
 
-            // Check old password
-            if (!Hash::check($request->old_password, $user->password)) {
-                return Helper::jsonResponse(false, 'Old password is incorrect', 400);
+                // Check old password
+                if (!Hash::check($request->old_password, $user->password)) {
+                    return Helper::jsonResponse(false, 'Old password is incorrect', 400);
+                }
+
+                // Update password
+                $user->password = Hash::make($request->new_password);
             }
 
-            // Update password
-            $user->password = Hash::make($request->new_password);
-        }
-
-        /*
+            /*
         |--------------------------------------------------------------------------
         | 🖼️ AVATAR UPLOAD
         |--------------------------------------------------------------------------
         */
-        if ($request->hasFile('avatar')) {
+            if ($request->hasFile('avatar')) {
 
-            if (!empty($user->avatar)) {
-                Helper::fileDelete(public_path($user->getRawOriginal('avatar')));
+                if (!empty($user->avatar)) {
+                    Helper::fileDelete(public_path($user->getRawOriginal('avatar')));
+                }
+
+                $validatedData['avatar'] = Helper::fileUpload(
+                    $request->file('avatar'),
+                    'user/avatar',
+                    getFileName($request->file('avatar'))
+                );
+            } else {
+                $validatedData['avatar'] = $user->avatar;
             }
 
-            $validatedData['avatar'] = Helper::fileUpload(
-                $request->file('avatar'),
-                'user/avatar',
-                getFileName($request->file('avatar'))
-            );
-
-        } else {
-            $validatedData['avatar'] = $user->avatar;
-        }
-
-        /*
+            /*
         |--------------------------------------------------------------------------
         | 👤 REMOVE PASSWORD FIELDS FROM UPDATE ARRAY
         |--------------------------------------------------------------------------
         */
-        unset(
-            $validatedData['old_password'],
-            $validatedData['new_password'],
-            $validatedData['new_password_confirmation']
-        );
+            unset(
+                $validatedData['old_password'],
+                $validatedData['new_password'],
+                $validatedData['new_password_confirmation']
+            );
 
-        /*
+            /*
         |--------------------------------------------------------------------------
         | 💾 UPDATE USER
         |--------------------------------------------------------------------------
         */
-        $user->update($validatedData);
+            $user->update($validatedData);
 
-        // Save password if changed
-        if ($request->filled('new_password')) {
-            $user->save();
+            // Save password if changed
+            if ($request->filled('new_password')) {
+                $user->save();
+            }
+
+            DB::commit();
+
+            $data = User::select($this->select)->find($user->id);
+
+            return Helper::jsonResponse(true, 'Profile updated successfully', 200, $data);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            if (!empty($validatedData['avatar']) && $validatedData['avatar'] !== $user->avatar) {
+                Helper::fileDelete(public_path($validatedData['avatar']));
+            }
+
+            return Helper::jsonResponse(false, 'Profile update failed: ' . $e->getMessage(), 500);
         }
-
-        DB::commit();
-
-        $data = User::select($this->select)->find($user->id);
-
-        return Helper::jsonResponse(true, 'Profile updated successfully', 200, $data);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        if (!empty($validatedData['avatar']) && $validatedData['avatar'] !== $user->avatar) {
-            Helper::fileDelete(public_path($validatedData['avatar']));
-        }
-
-        return Helper::jsonResponse(false, 'Profile update failed: ' . $e->getMessage(), 500);
     }
-}
 
     private function randomAlphaNum($length = 4)
     {
