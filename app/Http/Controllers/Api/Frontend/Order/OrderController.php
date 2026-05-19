@@ -1265,7 +1265,7 @@ class OrderController extends Controller
                             ],
                             [
                                 $smsSetting->sender ?? 'Our Company',
-                                $order->order_number,
+                                $order->id,
                                 $request->status,
                                 $banglaStatus[$request->status] ?? $request->status,
                                 $order->customer->name ?? 'Customer',

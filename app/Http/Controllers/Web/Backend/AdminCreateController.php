@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\DataTables;
 
@@ -100,7 +101,7 @@ class AdminCreateController extends Controller
                 'slug'             => $slug,
                 'name'             => $request->name,
                 'phone_number'     => $request->phone_number,
-                'address'          => $request->address,    
+                'address'          => $request->address,
                 'password'         => Hash::make('12345678'), // default password
 
                 'otp'              => null,
@@ -148,12 +149,31 @@ class AdminCreateController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validatedData = $request->validated();
+        $request->validate([
+            'name'         => 'required|string|max:255',
+            'phone_number' => [
+                'required',
+                'string',
+                'max:15',
+                Rule::unique('users', 'phone_number')->ignore($id),
+            ],
+            'address'      => 'nullable|string|max:255',
+        ]);
 
         try {
+            DB::beginTransaction();
 
+            $user = User::findOrFail($id);
+            $user->update([
+                'name'         => $request->name,
+                'phone_number' => $request->phone_number,
+                'address'      => $request->address,
+            ]);
+
+            DB::commit();
             session()->put('t-success', 'Admin updated successfully');
         } catch (Exception $e) {
+            DB::rollBack();
             session()->put('t-error', $e->getMessage());
         }
 

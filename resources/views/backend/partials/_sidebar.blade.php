@@ -47,19 +47,19 @@
                         <span class="side-menu__label">Order List</span>
                     </a>
                 </li>
-                <li class="slide">
+                {{-- <li class="slide">
                     <a class="side-menu__item {{ request()->routeIs('admin.category.*') ? 'has-link active' : '' }}"
                         href="{{ route('admin.category.index') }}">
                         <i class="fa-solid fa-address-card side-menu__icon"></i>
                         <span class="side-menu__label">Category</span>
                     </a>
-                </li>
+                </li> --}}
 
                 <li class="slide">
                     <a class="side-menu__item {{ request()->routeIs('admin.category.*') ? 'has-link active' : '' }}"
                         href="{{ route('admin.adminCreate.index') }}">
                         <i class="fa-solid fa-address-card side-menu__icon"></i>
-                        <span class="side-menu__label">User Create</span>
+                        <span class="side-menu__label">Admin Add</span>
                     </a>
                 </li>
                 {{-- <li class="slide">
