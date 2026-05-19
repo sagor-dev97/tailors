@@ -199,6 +199,8 @@ Route::controller(GalleryController::class)->group(function () {
     Route::post('update-gallery/{id}', 'updateGallery');
     Route::get('/get-gallery', 'getGallery');
     Route::delete('/delete-gallery/{id}', 'deleteGallery');
+
+    Route::get('/gallery-details/{id}','getGalleryDetails');
 });
 Route::controller(BlogController::class)->group(function () {
     Route::post('/blogs', 'store');

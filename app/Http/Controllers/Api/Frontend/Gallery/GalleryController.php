@@ -72,6 +72,28 @@ class GalleryController extends Controller
         ]);
     }
 
+    public function getGalleryDetails($id)
+    {
+        $gallery = Gallery::find($id);
+
+        if (!$gallery) {
+            return response()->json([
+                'status' => false,
+                'code'   => 404,
+                'data'   => 'Gallery image not found'
+            ], 404);
+        }
+
+        $gallery->image = $gallery->image ? asset($gallery->image) : null;
+
+        return response()->json([
+            'status' => true,
+            'code'   => 200,
+            'data'   => $gallery
+        ], 200);
+    }
+
+
     public function deleteGallery($id)
     {
         $gallery = Gallery::find($id);

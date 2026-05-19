@@ -43,7 +43,7 @@ class DashboardController extends Controller
                 DB::raw('COUNT(*) as total_orders'),
                 DB::raw("SUM(CASE WHEN orders.status = 'completed' THEN 1 ELSE 0 END) as completed_orders"),
                 DB::raw("SUM(CASE WHEN orders.status = 'pending' THEN 1 ELSE 0 END) as pending_orders"),
-                DB::raw("SUM(CASE WHEN orders.status = 'completed' THEN order_details.total ELSE 0 END) as completed_amount"),
+                DB::raw("SUM(CASE WHEN orders.status = 'delivered' THEN order_details.total ELSE 0 END) as completed_amount"),
                 DB::raw("SUM(CASE WHEN orders.status = 'pending' THEN order_details.total ELSE 0 END) as pending_amount"),
                 DB::raw('SUM(order_details.total) as total_amount')
             )
