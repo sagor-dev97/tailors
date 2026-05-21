@@ -273,7 +273,7 @@ class ShebaPayController extends Controller
             'secret-key' => env('SEBAPAY_SECRET_KEY'),
             'host-name'  => env('SEBAPAY_HOST_NAME'),
         ])->asForm()->post(
-            'http://pay.sebapay.xyz/request/payment/create',
+            'https://pay.sebapay.xyz/request/payment/create',
             [
                 'cus_name'   => $order->customer->name,
                 'cus_email'  => $order->customer->email ?? 'test@gmail.com',
@@ -311,13 +311,10 @@ class ShebaPayController extends Controller
             'app-key'    => env('SEBAPAY_APP_KEY'),
             'secret-key' => env('SEBAPAY_SECRET_KEY'),
             'host-name'  => env('SEBAPAY_HOST_NAME'),
-        ])->asMultipart()->post(
-            'http://pay.sebapay.xyz/request/payment/verify',
+        ])->asForm()->post(
+            'https://pay.sebapay.xyz/request/payment/verify',
             [
-                [
-                    'name' => 'transaction_id',
-                    'contents' => $transactionId
-                ]
+                'transactionId' => $transactionId,
             ]
         )->json();
 
@@ -370,13 +367,10 @@ class ShebaPayController extends Controller
             'app-key'    => env('SEBAPAY_APP_KEY'),
             'secret-key' => env('SEBAPAY_SECRET_KEY'),
             'host-name'  => env('SEBAPAY_HOST_NAME'),
-        ])->asMultipart()->post(
-            'http://pay.sebapay.xyz/request/payment/verify',
+        ])->asForm()->post(
+            'https://pay.sebapay.xyz/request/payment/verify',
             [
-                [
-                    'name' => 'transaction_id',
-                    'contents' => $request->transaction_id
-                ]
+                'transaction_id' => $request->transaction_id
             ]
         );
 
