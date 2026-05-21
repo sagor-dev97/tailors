@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\Frontend\Question\QuestionController;
 use App\Http\Controllers\Api\Frontend\RedeemCode\RedemeeCodeController;
 use App\Http\Controllers\Api\Frontend\RedeemCode\RedmeeCodeController;
 use App\Http\Controllers\Api\Frontend\Review\ReviewController;
+use App\Http\Controllers\Api\Frontend\Search\CustomerSearchController;
 use App\Http\Controllers\Api\Frontend\SettingsController;
 use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubcategoryController;
@@ -42,10 +43,10 @@ use App\Http\Controllers\Api\Gateway\Stripe\StripeOnBoardingController;
 use App\Http\Controllers\Api\InAppPurchase\InAppPurchaseController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Payment\PaymentController;
+use App\Http\Controllers\Api\Payment\ShebaPayController;
 use App\Models\BoostingPayment;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\Frontend\Search\CustomerSearchController;
 
 // health check
 Route::get('/health-check', function () {
@@ -221,3 +222,19 @@ Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payme
 Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 Route::get('/get-contact', [SubscribeController::class, 'getContactCms']);
+
+Route::prefix('sebapay')->group(function () {
+
+    // Create Payment
+    Route::post('/create-payment', [ShebaPayController::class, 'createPayment']);
+
+    // Verify Payment
+    Route::post('/verify-payment', [ShebaPayController::class, 'verifyPayment']);
+
+    // Success URL
+    Route::get('/success', [ShebaPayController::class, 'success']);
+
+    // Cancel URL
+    Route::get('/cancel', [ShebaPayController::class, 'cancel']);
+
+});

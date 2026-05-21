@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\Web\Backend\Access\PermissionController;
 use App\Http\Controllers\Web\Backend\Access\RoleController;
 use App\Http\Controllers\Web\Backend\Access\UserController;
@@ -352,6 +353,7 @@ Route::controller(SettingController::class)->group(function () {
     Route::post('/sms-service-toggle', 'toggleService')->name('setting.sms.service.toggle');
     Route::post('/sms-setting/update', 'updateKey')->name('setting.sms.update');
     Route::post('/sms/update-templates', 'updateTemplates')->name('api.sms.update-templates');
+    Route::post('/sms/preview-template', 'previewTemplate')->name('api.sms.preview-template');
 });
 
 

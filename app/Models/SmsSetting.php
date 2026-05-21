@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SmsSetting extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
     protected $fillable = [
         'provider',
@@ -18,12 +18,14 @@ class SmsSetting extends Model
         'admission_status',
         'sms_format',
         'sms_json',
+        'status_labels',
     ];
 
     protected $casts = [
         'service_status' => 'boolean',
         'admission_status' => 'boolean',
-         'templates_json' => 'array'
+        'templates_json' => 'array',
+        'status_labels' => 'array'
     ];
     public function getTemplate($status)
     {
@@ -31,24 +33,24 @@ class SmsSetting extends Model
         if ($this->templates_json && isset($this->templates_json[$status])) {
             return $this->templates_json[$status];
         }
-        
+
         // না পেলে পুরোনো কলাম থেকে নেবে
         $templateColumn = $status . '_template';
         if (isset($this->$templateColumn)) {
             return $this->$templateColumn;
         }
-        
+
         // কিছুই না পেলে ডিফল্ট
         return $this->sms_text;
     }
-    
+
     // সব টেমপ্লেট পাওয়া
     public function getAllTemplates()
     {
         if ($this->templates_json) {
             return $this->templates_json;
         }
-        
+
         // পুরোনো ডাটা থেকে JSON বানানো
         return [
             'pending' => $this->pending_template,
@@ -59,12 +61,12 @@ class SmsSetting extends Model
             'cancelled' => $this->cancelled_template,
         ];
     }
-    
+
     // টেমপ্লেট সেভ করার ফাংশন
     public function saveTemplates($templates)
     {
         $this->templates_json = $templates;
-        
+
         // ব্যাকওয়ার্ড কম্প্যাটিবিলিটির জন্য পুরোনো কলামও আপডেট
         foreach ($templates as $status => $template) {
             $column = $status . '_template';
@@ -72,15 +74,15 @@ class SmsSetting extends Model
                 $this->$column = $template;
             }
         }
-        
+
         return $this->save();
     }
-    
+
     // মেসেজ জেনারেট (বিদ্যমান ফাংশন)
     public function generateMessage($status, $order)
     {
         $template = $this->getTemplate($status);
-        
+
         $banglaStatus = [
             'pending' => 'অপেক্ষমান',
             'processing' => 'প্রক্রিয়াধীন',
@@ -89,12 +91,12 @@ class SmsSetting extends Model
             'completed' => 'সম্পন্ন হয়েছে',
             'cancelled' => 'বাতিল করা হয়েছে'
         ];
-        
+
         $replacements = [
             '{company}' => $this->sender ?? 'আমাদের কোম্পানি',
             '{order_number}' => $order->order_number ?? '',
             '{status}' => $status,
-            '{bangla_status}' => $banglaStatus[$status] ?? $status,
+            '{bangla_status}' => ($this->status_labels[$status] ?? $banglaStatus[$status] ?? $status),
             '{customer_name}' => $order->customer->name ?? 'গ্রাহক',
             '{customer_phone}' => $order->customer->phone ?? '',
             '{order_date}' => $order->created_at ? $order->created_at->format('d/m/Y') : date('d/m/Y'),
@@ -102,10 +104,9 @@ class SmsSetting extends Model
             '{payment_method}' => $order->payment_method ?? 'ক্যাশ অন ডেলিভারি',
             '{delivery_address}' => $order->delivery_address ?? '',
         ];
-        
+
         $message = str_replace(array_keys($replacements), array_values($replacements), $template);
-        
+
         return strip_tags($message);
     }
 }
-

@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\SmsSetting;
+use App\Models\Order;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -183,6 +184,7 @@ class SettingController extends Controller
             'type'          => 'nullable|string|max:50',
             'sms_format'    => 'nullable|string|max:50',
             'templates_json' => 'nullable|array',  // Changed from 'templates' to 'templates_json'
+            'status_labels'  => 'nullable|array',
         ]);
 
         $sms = SmsSetting::first();
@@ -198,9 +200,35 @@ class SettingController extends Controller
         $sms->type        = $request->type;
         $sms->sms_format  = $request->sms_format;
 
-        // Template update - FIXED: Use templates_json from request
+        // Template update - use templates_json from request (normalize PHP-style placeholders)
         if ($request->has('templates_json')) {
-            $sms->templates_json = $request->templates_json;
+            $incoming = $request->templates_json;
+            $normalized = [];
+            foreach ($incoming as $k => $tpl) {
+                if (!is_string($tpl)) {
+                    $normalized[$k] = $tpl;
+                    continue;
+                }
+                // replace patterns like {$order->order_number} or {$request->total} with {order_number} / {total}
+                $tpl = preg_replace('/\\{\\$[^}]*->([a-zA-Z0-9_]+)\\}/', '{$1}', $tpl);
+                // also replace {$variable} style (without ->) to {variable}
+                $tpl = preg_replace('/\\{\\$([a-zA-Z0-9_]+)\\}/', '{$1}', $tpl);
+                $normalized[$k] = $tpl;
+            }
+            $sms->templates_json = $normalized;
+        }
+
+        // Status labels (Bangla names for statuses)
+        if ($request->has('status_labels')) {
+            // normalize keys to snake_case
+            $labelsIn = $request->status_labels;
+            $labels = [];
+            foreach ($labelsIn as $k => $v) {
+                $key = strtolower(trim($k));
+                $key = preg_replace('/\s+/', '_', $key);
+                $labels[$key] = $v;
+            }
+            $sms->status_labels = $labels;
         } else {
             // Fallback for old format compatibility
             $sms->templates_json = [
@@ -234,7 +262,8 @@ class SettingController extends Controller
             'message' => 'Configuration Updated Successfully',
             'data'    => [
                 'basic' => $sms->only(['api_key', 'sender_id', 'sender', 'type', 'sms_format']),
-                'templates' => $sms->templates_json
+                'templates' => $sms->templates_json,
+                'status_labels' => $sms->status_labels
             ]
         ]);
     }
@@ -289,8 +318,25 @@ class SettingController extends Controller
                 $settings = new SmsSetting();
             }
 
+            // Normalize PHP-style placeholders like {$order->order_number} to {order_number}
+            $normalized = [];
+            foreach ($request->templates as $key => $tpl) {
+                if (!is_string($tpl)) {
+                    $normalized[$key] = $tpl;
+                    continue;
+                }
+
+                // replace patterns like {$order->order_number} or {$request->total} with {order_number} / {total}
+                $tpl = preg_replace('/\\{\\$[^}]*->([a-zA-Z0-9_]+)\\}/', '{$1}', $tpl);
+
+                // also replace {$variable} style (without ->) to {variable}
+                $tpl = preg_replace('/\\{\\$([a-zA-Z0-9_]+)\\}/', '{$1}', $tpl);
+
+                $normalized[$key] = $tpl;
+            }
+
             // সরাসরি JSON আপডেট
-            $settings->templates_json = $request->templates;
+            $settings->templates_json = $normalized;
             $settings->save();
 
             return response()->json([
@@ -304,6 +350,55 @@ class SettingController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+    /**
+     * Preview a template by rendering placeholders with sample or real order data.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function previewTemplate(Request $request)
+    {
+        $request->validate([
+            'status' => 'required|string',
+            'order_id' => 'nullable|integer'
+        ]);
+
+        $sms = SmsSetting::first();
+        if (!$sms) {
+            return response()->json(['success' => false, 'message' => 'SMS settings not configured'], 404);
+        }
+
+        // try to get an actual order if provided
+        $order = null;
+        if ($request->filled('order_id')) {
+            $order = Order::with('customer')->find($request->order_id);
+        }
+
+        // build sample order data when real order not provided
+        if (!$order) {
+            $order = new \stdClass();
+            $order->order_number = 'SAMPLE-ORD-001';
+            $order->customer = new \stdClass();
+            $order->customer->name = 'জন ডো';
+            $order->customer->phone = '01XXXXXXXXX';
+            $order->created_at = now();
+            $order->total_amount = '1000';
+            $order->payment_method = 'ক্যাশ';
+            $order->delivery_address = 'ঢাকা, বাংলাদেশ';
+        }
+
+        $status = $request->status;
+
+        // generate rendered message using SmsSetting helper
+        $rendered = $sms->generateMessage($status, $order);
+
+        return response()->json([
+            'success' => true,
+            'status' => $status,
+            'template' => $sms->getTemplate($status),
+            'rendered' => $rendered
+        ]);
     }
     /**
      * Update the system settings.
