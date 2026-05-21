@@ -10,7 +10,6 @@
     <meta name="description" content="{!! strip_tags(settings()->description ?? '') !!}">
     <meta name="author" content="{{ settings()->author ?? '' }}">
     <meta name="keywords" content="{!! strip_tags(settings()->keywords ?? '') !!}">
-
     <!-- FAVICON -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset(settings()->favicon ?? 'default/logo.svg') }}" />
 
