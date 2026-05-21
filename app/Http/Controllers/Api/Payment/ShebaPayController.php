@@ -237,34 +237,50 @@ class ShebaPayController extends Controller
         }
 
         // CREATE PAYMENT (DOC FIXED: multipart/form-data)
+        // $response = Http::withHeaders([
+        //     'app-key'    => env('SEBAPAY_APP_KEY'),
+        //     'secret-key' => env('SEBAPAY_SECRET_KEY'),
+        //     'host-name'  => env('SEBAPAY_HOST_NAME'),
+        //     'Content-Type' => 'application/x-www-form-urlencoded',
+        // ])->asMultipart()->post(
+        //     'http://pay.sebapay.xyz/request/payment/create',
+        //     [
+        //         [
+        //             'name' => 'cus_name',
+        //             'contents' => $order->customer->name
+        //         ],
+        //         [
+        //             'name' => 'cus_email',
+        //             'contents' => $order->customer->email ?? 'test@gmail.com'
+        //         ],
+        //         [
+        //             'name' => 'amount',
+        //             'contents' => $amount
+        //         ],
+        //         [
+        //             'name' => 'success_url',
+        //             'contents' => url('/api/sebapay/success?order_id=' . $order->id)
+        //         ],
+        //         [
+        //             'name' => 'cancel_url',
+        //             'contents' => url('/api/sebapay/cancel?order_id=' . $order->id)
+        //         ],
+        //     ]
+        // );
+
         $response = Http::withHeaders([
             'app-key'    => env('SEBAPAY_APP_KEY'),
             'secret-key' => env('SEBAPAY_SECRET_KEY'),
             'host-name'  => env('SEBAPAY_HOST_NAME'),
-            'Content-Type' => 'application/x-www-form-urlencoded',
-        ])->asMultipart()->post(
+        ])->asForm()->post(
             'http://pay.sebapay.xyz/request/payment/create',
             [
-                [
-                    'name' => 'cus_name',
-                    'contents' => $order->customer->name
-                ],
-                [
-                    'name' => 'cus_email',
-                    'contents' => $order->customer->email ?? 'test@gmail.com'
-                ],
-                [
-                    'name' => 'amount',
-                    'contents' => $amount
-                ],
-                [
-                    'name' => 'success_url',
-                    'contents' => url('/api/sebapay/success?order_id=' . $order->id)
-                ],
-                [
-                    'name' => 'cancel_url',
-                    'contents' => url('/api/sebapay/cancel?order_id=' . $order->id)
-                ],
+                'cus_name'   => $order->customer->name,
+                'cus_email'  => $order->customer->email ?? 'test@gmail.com',
+                'amount'     => $amount,
+
+                'success_url' => url('/api/sebapay/success?order_id=' . $order->id),
+                'cancel_url'  => url('/api/sebapay/cancel?order_id=' . $order->id),
             ]
         );
 
