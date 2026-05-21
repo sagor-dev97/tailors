@@ -153,4 +153,25 @@ class BlogController extends Controller
             ], 500);
         }
     }
+
+    public function blogsDetails($id)
+    {
+        $blog = Blog::find($id);
+
+        if (!$blog) {
+            return response()->json([
+                'status' => false,
+                'code'   => 404,
+                'data'   => 'Blogs not found'
+            ]);
+        }
+
+        $blog->image = $blog->image ? asset($blog->image) : null;
+
+        return response()->json([
+            'status' => true,
+            'code'   => 200,
+            'data'   => $blog
+        ]);
+    }
 }

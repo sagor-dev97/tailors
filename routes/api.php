@@ -208,6 +208,7 @@ Route::controller(BlogController::class)->group(function () {
     Route::post('update-blogs/{id}', 'updateBlogs');
     Route::get('/get-blogs', 'blogs');
     Route::delete('/delete-blogs/{id}', 'deleteBlogs');
+    Route::get('/blog-details/{id}', 'blogsDetails');
 });
 
 Route::controller(ContactUsController::class,)->group(function () {
