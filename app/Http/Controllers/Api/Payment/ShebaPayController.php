@@ -220,7 +220,6 @@ class ShebaPayController extends Controller
                 'message' => 'Order not approved yet',
             ]);
         }
-
         if ($order->payment_status == 'paid') {
             return response()->json([
                 'status' => false,
