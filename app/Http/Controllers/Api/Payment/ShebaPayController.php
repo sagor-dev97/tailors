@@ -284,9 +284,18 @@ class ShebaPayController extends Controller
             ]
         );
 
+        $responseData = $response->json();
+
+        // Store payment transaction ID for later verification
+        if (isset($responseData['transactionId'])) {
+            $order->update([
+                'transaction_id' => $responseData['transactionId']
+            ]);
+        }
+
         return response()->json([
             'status' => true,
-            'data' => $response->json(),
+            'data' => $responseData,
             'raw'  => $response->body(),
         ]);
     }
@@ -296,13 +305,23 @@ class ShebaPayController extends Controller
      */
     public function success(Request $request)
     {
-        $transactionId = $request->transactionId;
         $orderId = $request->order_id;
 
-        if (!$transactionId || !$orderId) {
+        if (!$orderId) {
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid success callback',
+                'message' => 'Invalid success callback - missing order_id',
+            ]);
+        }
+
+        // Get order and transaction ID from database
+        $order = Order::findOrFail($orderId);
+        $transactionId = $order->transaction_id;
+
+        if (!$transactionId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Transaction ID not found',
             ]);
         }
 
@@ -320,21 +339,11 @@ class ShebaPayController extends Controller
 
         if (($verify['status'] ?? 0) == 1) {
 
-            // Order::where('id', $orderId)->update([
-            //     'payment_status' => 'paid',
-            //     'status' => 'payment_done',
-            //     'transaction_id' => $transactionId,
-            // ]);
-
-            $order = Order::find($orderId);
-
-            if ($order) {
-                $order->update([
-                    'payment_status' => 'paid',
-                    'status' => 'payment_done',
-                    'transaction_id' => $transactionId,
-                ]);
-            }
+            $order->update([
+                'payment_status' => 'paid',
+                'status' => 'payment_done',
+                'transaction_id' => $transactionId,
+            ]);
 
             return redirect('https://your-react-site.com/payment-success');
         }
