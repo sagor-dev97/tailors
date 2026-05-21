@@ -350,7 +350,6 @@ class ShebaPayController extends Controller
 
         return redirect('https://your-react-site.com/payment-failed');
     }
-
     /**
      * CANCEL
      */
