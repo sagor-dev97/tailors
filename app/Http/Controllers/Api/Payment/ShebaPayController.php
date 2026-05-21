@@ -214,7 +214,7 @@ class ShebaPayController extends Controller
         $order = Order::with(['customer', 'detail'])
             ->findOrFail($request->order_id);
 
-        if ($order->status != 'accept') {
+        if ($order->order_status != 'accept') {
             return response()->json([
                 'status' => false,
                 'message' => 'Order not approved yet',
