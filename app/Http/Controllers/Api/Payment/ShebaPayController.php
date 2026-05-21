@@ -227,7 +227,7 @@ class ShebaPayController extends Controller
             ]);
         }
 
-        $amount = $order->detail->total ?? 0;
+        $amount = $order->total_amount ?? 0;
 
         if (!$amount) {
             return response()->json([
