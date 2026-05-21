@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('order_number')->unique();
             $table->date('order_date');
             $table->date('delivery_date');
-            $table->enum('status', ['pending', 'processing', 'completed', 'canceled'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'completed', 'canceled','payment_done_delivery_not'])->default('pending');
             $table->timestamps();
         });
 

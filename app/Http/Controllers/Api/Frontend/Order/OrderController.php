@@ -86,6 +86,7 @@ class OrderController extends Controller
                 'order_number'  => 'ORD-' . time(),
                 'order_date'    => $request->order_date,
                 'delivery_date' => $request->delivery_date,
+                'total_amount'   => $request->total ?? 0,
                 'status'        => 'pending',
             ]);
 
@@ -285,6 +286,7 @@ class OrderController extends Controller
                 'order_date'    => $request->order_date,
                 'delivery_date' => $request->delivery_date,
                 'status'        => $request->status,
+                'order_status'  => 'accept', // Example: you can set this based on your logic
             ], fn($value) => !is_null($value));
 
             if (!empty($orderData)) {
