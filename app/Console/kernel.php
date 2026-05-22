@@ -7,22 +7,18 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array<int, class-string>
-     */
-    protected $commands = [
-
-        \App\Console\Commands\CapturePendingPayments::class,
-    ];
-
-    /**
-     * Define the application's command schedule.
-     */
-    protected function schedule(Schedule $schedule): void
+    protected function schedule(Schedule $schedule)
     {
+        // প্রতি মাসের ২ তারিখে রাত 9 টায়
+        $schedule->command('sms:monthly-orders')
+            ->monthlyOn(22)
+            ->withoutOverlapping();
+    }
 
-        $schedule->command('payments:capture-pending')->daily();
+    protected function commands(): void
+    {
+        $this->load(__DIR__.'/Commands');
+
+        require base_path('routes/console.php');
     }
 }

@@ -16,8 +16,10 @@ return new class extends Migration
             $table->string('transaction_id')->after('total_amount')->nullable();
             $table->enum('payment_status', ['unpaid','paid'])->after('transaction_id')->default('unpaid');
             $table->enum('order_status', ['pending','accept','reject','completed'])->after('payment_status')->default('pending');
+            $table->enum('schedule_message_status', ['noneed','sent',])->after('payment_status')->default('noneed');
+            $table->integer('schedule_count')->after('schedule_message_status')->default(0);
 
-            $table->string('payment_method')->after('order_status')->nullable();
+            $table->string('payment_method')->after('schedule_count')->nullable();
         });
     }
 

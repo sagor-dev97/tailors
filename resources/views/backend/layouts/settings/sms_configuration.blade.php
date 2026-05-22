@@ -76,7 +76,7 @@
                         </div>
 
                         {{-- DYNAMIC TEMPLATE SECTION --}}
-                        <div
+                        {{-- <div
                             style="margin-top:25px;padding:20px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
                             <h4 style="margin-bottom:20px;">📱 SMS Template Configuration</h4>
 
@@ -88,7 +88,7 @@
                             </div>
 
                             {{-- TYPE --}}
-                            <div style="margin-top:15px;">
+                            <div style="margin-top:15px;"> 
                                 <label>Message Type</label>
                                 <select id="typeInput" class="form-control mt-2">
                                     <option value="text"
@@ -285,7 +285,7 @@
                                 <small class="text-muted">⚠️ This template will be used if no status-specific template is
                                     found</small>
                             </div>
-                        </div>
+                        </div> --}}
 
                         {{-- STATUS LABELS (Bangla names for statuses) --}}
                         <div

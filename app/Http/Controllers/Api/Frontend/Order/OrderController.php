@@ -199,7 +199,7 @@ class OrderController extends Controller
             } else {
 
                 $phone = $customer->phone ?? null;
-
+                $bkash = env('BKASH_NUMBER');
                 if ($phone) {
 
                     $message = "প্রিয় গ্রাহক, আপনার অর্ডার সফলভাবে গ্রহণ করা হয়েছে।\n"
@@ -208,7 +208,7 @@ class OrderController extends Controller
                         . "পরিশোধ: {$request->advance} টাকা\n"
                         . "বাকি: {$request->due} টাকা\n\n"
                         . "ঢাকা টেইলার্স\n"
-                        . "মোবাইল এবং বিকাশ: 01XXXXXXXXX";
+                        . "মোবাইল এবং বিকাশ: {$bkash}";
                     $smsSent = $this->sendSms($phone, $message, $order->id);
 
                     if (!$smsSent) {
@@ -286,6 +286,7 @@ class OrderController extends Controller
                 'order_date'    => $request->order_date,
                 'delivery_date' => $request->delivery_date,
                 'status'        => $request->status,
+                'total_amount'  => $request->total,
                 'order_status'  => 'accept', // Example: you can set this based on your logic
             ], fn($value) => !is_null($value));
 
