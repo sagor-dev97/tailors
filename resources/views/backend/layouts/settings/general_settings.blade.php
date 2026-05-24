@@ -33,7 +33,7 @@
 
                                 <div class="row mb-4">
 
-                                    <div class="form-group">
+                                    {{-- <div class="form-group">
                                         <label for="username" class="form-label">Name:</label>
                                         <input type="text" class="form-control @error('name') is-invalid @enderror"
                                             name="name" placeholder="Name" id="username"
@@ -41,9 +41,9 @@
                                         @error('name')
                                         <span class="text-danger">{{ $message }}</span>
                                         @enderror
-                                    </div>
+                                    </div> --}}
 
-                                    <div class="form-group">
+                                    {{-- <div class="form-group">
                                         <label for="title" class="form-label">Title:</label>
                                         <input type="text" class="form-control @error('title') is-invalid @enderror"
                                             name="title" placeholder="Title" id="title"
@@ -51,16 +51,16 @@
                                         @error('title')
                                         <span class="text-danger">{{ $message }}</span>
                                         @enderror
-                                    </div>
+                                    </div> --}}
                                     
-                                    <div class="form-group">
+                                    {{-- <div class="form-group">
                                         <label for="description" class="form-label">Description:</label>
                                         <textarea class="form-control @error('description') is-invalid @enderror"
                                             name="description" placeholder="Description" id="description">{{ $setting->description ?? old('description') ?? '' }}</textarea>
                                         @error('description')
                                         <span class="text-danger">{{ $message }}</span>
                                         @enderror
-                                    </div>
+                                    </div> --}}
                                  
                                     
                                     <div class="form-group">

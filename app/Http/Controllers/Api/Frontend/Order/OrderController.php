@@ -76,14 +76,20 @@ class OrderController extends Controller
                 'phone'    => $request->phone_number,
                 'receiver' => $request->receiver,
             ]);
+            $lastOrder = Order::orderBy('id', 'desc')->first();
 
+            $nextNumber = $lastOrder
+                ? ((int) substr($lastOrder->order_number, 4)) + 1
+                : 1;
+
+            $orderNumber = 'ord-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
 
             $order = Order::create([
                 'user_id'       => $authUser->id,
                 'customer_id'   => $customer->id,
                 'receiver'      => $request->receiver,
-                'order_number'  => 'ORD-' . time(),
+                'order_number'  => $orderNumber,
                 'order_date'    => $request->order_date,
                 'delivery_date' => $request->delivery_date,
                 'total_amount'   => $request->total ?? 0,
@@ -226,9 +232,9 @@ class OrderController extends Controller
             return response()->json([
                 'status'  => true,
                 'code'   => 200,
-              'message'  => $smsWarning
-                ? 'Order created successfully, but ' . $smsWarning
-                : 'Order created & SMS sent successfully.',
+                'message'  => $smsWarning
+                    ? 'Order created successfully, but ' . $smsWarning
+                    : 'Order created & SMS sent successfully.',
                 'order_id' => $order->id,
                 'user_id' => $order->user_id,
                 'phone' => $customer->phone,
