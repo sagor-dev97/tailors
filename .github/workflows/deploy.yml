@@ -16,7 +16,7 @@ jobs:
         with:
           server: ftp.obiram.top
           username: tailor@tailor.obiram.top
-          password: *rEUw$P4K!rJikA1
+          password: bAO@Lv},Eao_L]K[
           exclude: |
             public/**
             **/.git*
