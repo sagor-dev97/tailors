@@ -132,6 +132,7 @@ class OrderController extends Controller
                 'sleeves'  => $request->sleeves,
                 'neck'     => $request->neck,
                 'shoulder' => $request->shoulder,
+                'muhri'    => $request->muhri,
                 'cuff'     => $request->cuff,
                 'hip'      => $request->hip,
 
@@ -334,6 +335,7 @@ class OrderController extends Controller
                 'sleeves'  => $request->sleeves,
                 'neck'     => $request->neck,
                 'shoulder' => $request->shoulder,
+                'muhri'    => $request->muhri,
                 'cuff'     => $request->cuff,
                 'hip'      => $request->hip,
 
