@@ -111,6 +111,9 @@
     },
     "platform": {
         "php": "8.3.12"
-    }
+    },
+        "audit": {
+            "block-insecure": false
+        }
 }
 }

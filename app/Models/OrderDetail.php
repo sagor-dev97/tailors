@@ -44,6 +44,7 @@ class OrderDetail extends Model
     'waist',
     'hi',
     'run',
+    'muhri',
 
     'fabric_qty',
     'fabric_price',
