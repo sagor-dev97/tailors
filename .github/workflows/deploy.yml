@@ -20,7 +20,7 @@ jobs:
           server: 72.61.233.228
           username: dhakatailors
           password: YJC4grOqRmLOcMsXjpap
-    
+  
           exclude: |
             public/**
             **/.git*
