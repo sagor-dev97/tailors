@@ -18,6 +18,7 @@ class OrderReportResource extends JsonResource
             'id'              => $this->id,
             'user_id'         => $this->user_id,
             'customer_id'     => $this->customer_id,
+            'cu_order_id'     => $this->cu_order_id,
             'receiver'        => $this->receiver,
             'order_number'    => $this->order_number,
             'order_date'      => $this->order_date,
