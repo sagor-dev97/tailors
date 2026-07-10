@@ -44,6 +44,7 @@ return new class extends Migration
             $table->boolean('double_hand_punjabi')->default(false);
             $table->boolean('punjabi')->default(false);
             $table->boolean('arabian_jubba')->default(false);
+         
             $table->boolean('kabli')->default(false);
             $table->boolean('fatwa')->default(false);
             $table->boolean('salwar')->default(false);

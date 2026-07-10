@@ -11,6 +11,9 @@ class OrderDetail extends Model
 
     'single_hand_punjabi',
     'double_hand_punjabi',
+    'chata_jubba',
+    'belly_loose',
+    'chest_loose',
     'punjabi',
     'arabian_jubba',
     'kabli',

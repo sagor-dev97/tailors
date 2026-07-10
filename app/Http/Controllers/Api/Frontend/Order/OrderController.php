@@ -85,8 +85,22 @@ class OrderController extends Controller
             $orderNumber = 'ord-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
 
+            if ($request->filled('cu_order_id')) {
+
+                $exists = Order::where('cu_order_id', $request->cu_order_id)->exists();
+
+                if ($exists) {
+                    return response()->json([
+                        'status' => false,
+                        'code' => 422,
+                        'message' => 'This Customer Order ID already exists.',
+                    ], 422);
+                }
+            }
+
             $order = Order::create([
                 'user_id'       => $authUser->id,
+                'cu_order_id'     =>$request->cu_order_id ?? null,
                 'customer_id'   => $customer->id,
                 'receiver'      => $request->receiver,
                 'order_number'  => $orderNumber,
@@ -102,15 +116,18 @@ class OrderController extends Controller
                 'order_id' => $order->id,
 
                 /* ===== garments ===== */
-                'single_hand_punjabi' => $request->single_hand_punjabi ?? false,
-                'double_hand_punjabi' => $request->double_hand_punjabi ?? false,
-                'punjabi'             => $request->punjabi ?? false,
-                'arabian_jubba'       => $request->arabian_jubba ?? false,
-                'kabli'               => $request->kabli ?? false,
-                'fatwa'               => $request->fatwa ?? false,
-                'salwar'              => $request->salwar ?? false,
-                'pajama'              => $request->pajama ?? false,
-                'punjabi_pajama'      => $request->punjabi_pajama ?? false,
+                'single_hand_punjabi' => $request->single_hand_punjabi ?? null,
+                'double_hand_punjabi' => $request->double_hand_punjabi ?? null,
+                'chata_jubba'         => $request->chata_jubba ?? null,
+                'belly_loose'         => $request->belly_loose ?? null,
+                'chest_loose'         => $request->chest_loose ?? null,
+                'punjabi'             => $request->punjabi ?? null,
+                'arabian_jubba'       => $request->arabian_jubba ?? null,
+                'kabli'               => $request->kabli ?? null,
+                'fatwa'               => $request->fatwa ?? null,
+                'salwar'              => $request->salwar ?? null,
+                'pajama'              => $request->pajama ?? null,
+                'punjabi_pajama'      => $request->punjabi_pajama ?? null,
 
                 /* ===== upper features ===== */
                 'chest_pocket'  => $request->chest_pocket ?? false,
@@ -307,6 +324,9 @@ class OrderController extends Controller
                 // garments
                 'single_hand_punjabi' => $request->single_hand_punjabi,
                 'double_hand_punjabi' => $request->double_hand_punjabi,
+                'chata_jubba'         => $request->chata_jubba,
+                'belly_loose'         => $request->belly_loose,
+                'chest_loose'         => $request->chest_loose,
                 'punjabi'             => $request->punjabi,
                 'arabian_jubba'       => $request->arabian_jubba,
                 'kabli'               => $request->kabli,
