@@ -95,14 +95,23 @@ class CustomerSearchController extends Controller
         }
 
         // Order Number Filter
+        // if ($request->filled('order_number')) {
+
+        //     $query->where('order_number', $request->order_number);
+        // }
+        // if ($request->filled('cu_order_id')) {
+
+        //     $query->where('cu_order_id', $request->cu_order_id);
+        // }
         if ($request->filled('order_number')) {
 
-            $query->where('order_number', $request->order_number);
-        }
-        if ($request->filled('cu_order_id')) {
+    $search = $request->order_number;
 
-            $query->where('cu_order_id', $request->cu_order_id);
-        }
+    $query->where(function ($q) use ($search) {
+        $q->where('order_number', $search)
+          ->orWhere('cu_order_id', $search);
+    });
+}
 
         // Custom Date Range Filter
         if ($request->filled('from_date') && $request->filled('to_date')) {
