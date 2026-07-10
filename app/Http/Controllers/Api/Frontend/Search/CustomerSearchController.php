@@ -99,6 +99,10 @@ class CustomerSearchController extends Controller
 
             $query->where('order_number', $request->order_number);
         }
+        if ($request->filled('cu_order_id')) {
+
+            $query->where('cu_order_id', $request->cu_order_id);
+        }
 
         // Custom Date Range Filter
         if ($request->filled('from_date') && $request->filled('to_date')) {
