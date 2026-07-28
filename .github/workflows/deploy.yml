@@ -22,7 +22,7 @@ jobs:
           # password: YJC4grOqRmLOcMsXjpap
   
           exclude: |
-            public/**
+           
             **/.git*
             **/node_modules/**
             **/vendor/**
