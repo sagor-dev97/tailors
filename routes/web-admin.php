@@ -317,6 +317,9 @@ Route::controller(MailSettingController::class)->group(function () {
     Route::patch('setting/mail', 'update')->name('setting.mail.update');
 
     Route::post('setting/send', 'send')->name('setting.mail.send');
+
+    Route::get('setting/bksh', 'bkshIndex')->name('setting.bksh.index');
+    Route::patch('setting/bksh', 'updateBksh')->name('setting.bksh.update');
 });
 
 //! Route for Stripe Settings

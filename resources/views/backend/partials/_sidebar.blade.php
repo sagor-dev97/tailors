@@ -205,6 +205,8 @@
                                 Settings</a></li>
                         <li><a href="{{ route('admin.setting.mail.index') }}" class="slide-item">Mail Settings</a>
                         </li>
+                        <li><a href="{{ route('admin.setting.bksh.index') }}" class="slide-item">Bksh Settings</a>
+                        </li>
                         {{-- <li><a href="{{ route('admin.setting.stripe.index') }}" class="slide-item">Stripe Settings</a></li> --}}
                         <li><a href="{{ route('admin.setting.firebase.index') }}" class="slide-item">Firebase
                                 Settings</a></li>

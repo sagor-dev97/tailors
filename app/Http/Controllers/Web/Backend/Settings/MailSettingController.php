@@ -33,6 +33,51 @@ class MailSettingController extends Controller
 
         return view('backend.layouts.settings.mail_settings', compact('settings'));
     }
+    public function bkshIndex(): View
+    {
+        $bksh = [
+            'sebapay_host_name' => env('SEBAPAY_HOST_NAME', ''),
+            'sebapay_secret_key' => env('SEBAPAY_SECRET_KEY', ''),
+            'sebapay_app_key' => env('SEBAPAY_APP_KEY', ''),
+            'bkash_number' => env('BKASH_NUMBER', ''),
+        ];
+
+        return view('backend.layouts.settings.bksh_settings', compact('bksh'));
+    }
+
+     public function updateBksh(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'sebapay_host_name' => 'nullable|string|regex:/^[\S]*$/',
+            'sebapay_secret_key' => 'nullable|string|regex:/^[\S]*$/',
+            'sebapay_app_key' => 'nullable|string|regex:/^[\S]*$/',
+            'bkash_number' => 'nullable|string|regex:/^[\S]*$/',
+        ]);
+
+        try {
+            $envContent = File::get(base_path('.env'));
+            $lineBreak  = "\n";
+            $envContent = preg_replace([
+                '/SEBAPAY_HOST_NAME=(.*)\s*/',
+                '/SEBAPAY_SECRET_KEY=(.*)\s*/',
+                '/SEBAPAY_APP_KEY=(.*)\s*/',
+                '/BKASH_NUMBER=(.*)\s*/',
+               
+            ], [
+                'SEBAPAY_HOST_NAME=' . $request->sebapay_host_name . $lineBreak,
+                'SEBAPAY_SECRET_KEY=' . $request->sebapay_secret_key . $lineBreak,
+                'SEBAPAY_APP_KEY=' . $request->sebapay_app_key . $lineBreak,
+                'BKASH_NUMBER=' . $request->bkash_number . $lineBreak,
+                
+            ], $envContent);
+
+            File::put(base_path('.env'), $envContent);
+
+            return back()->with('t-success', 'Updated successfully');
+        } catch (Exception) {
+            return back()->with('t-error', 'Failed to update');
+        }
+    }
 
     /**
      * Update mail settings.
