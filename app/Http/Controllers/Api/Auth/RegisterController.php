@@ -192,17 +192,17 @@ class RegisterController extends Controller
 
         $admins = User::role('admin', 'web')->get();
 
-        foreach ($admins as $admin) {
+        // foreach ($admins as $admin) {
 
-            $admin->notify(new RegistrationNotification($notiData));
+        //     $admin->notify(new RegistrationNotification($notiData));
 
-            if (config('settings.reverb') === 'on') {
+        //     if (config('settings.reverb') === 'on') {
 
-                broadcast(
-                    new RegistrationNotificationEvent($notiData, $admin->id)
-                )->toOthers();
-            }
-        }
+        //         broadcast(
+        //             new RegistrationNotificationEvent($notiData, $admin->id)
+        //         )->toOthers();
+        //     }
+        // }
 
         // ===============================
         // SEND WELCOME SMS
