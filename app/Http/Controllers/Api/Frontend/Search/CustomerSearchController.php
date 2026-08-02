@@ -91,7 +91,10 @@ class CustomerSearchController extends Controller
 
             $query->whereHas('user', function ($q) use ($phone) {
                 $q->where('phone_number', $phone);
-            });
+            })
+            ->orWhereHas('customer', function ($customerQuery) use ($phone) {
+            $customerQuery->where('phone_number', $phone);
+        });
         }
 
         // Order Number Filter
