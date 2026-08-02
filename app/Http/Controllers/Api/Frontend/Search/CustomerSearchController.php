@@ -93,7 +93,7 @@ class CustomerSearchController extends Controller
                 $q->where('phone_number', $phone);
             })
             ->orWhereHas('customer', function ($customerQuery) use ($phone) {
-            $customerQuery->where('phone_number', $phone);
+            $customerQuery->where('phone', $phone);
         });
         }
 
