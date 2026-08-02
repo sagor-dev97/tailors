@@ -128,6 +128,7 @@ class OrderController extends Controller
                 'salwar'              => $request->salwar ?? null,
                 'pajama'              => $request->pajama ?? null,
                 'punjabi_pajama'      => $request->punjabi_pajama ?? null,
+                'hem'                 => $request->hem ?? null,
 
                 /* ===== upper features ===== */
                 'chest_pocket'  => $request->chest_pocket ?? false,
@@ -341,6 +342,7 @@ class OrderController extends Controller
                 'double_stitch' => $request->double_stitch,
                 'front_button'  => $request->front_button,
                 'side_cut'      => $request->side_cut,
+                'hem'           => $request->hem,
 
                 // bottom features
                 'back_pocket'          => $request->back_pocket,

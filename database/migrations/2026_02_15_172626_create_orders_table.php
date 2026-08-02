@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('order_number')->unique();
             $table->date('order_date');
             $table->date('delivery_date');
-            $table->enum('status', ['pending', 'processing', 'completed', 'canceled','payment_done_delivery_not'])->default('pending');
+            $table->enum('status', ['accept','pending', 'processing', 'completed', 'canceled','payment_done_delivery_not'])->default('pending');
             $table->timestamps();
         });
 
@@ -80,6 +80,7 @@ return new class extends Migration
             $table->string('waist')->nullable();
             $table->string('hi')->nullable();
             $table->string('run')->nullable();
+            $table->string('hem')->nullable();
 
             /* ===== cost ===== */
             $table->decimal('fabric_qty', 10, 2)->nullable();

@@ -41,6 +41,7 @@ class OrderDetail extends Model
     'shoulder',
     'cuff',
     'hip',
+    'hem',
 
     'bottom_length',
     'natural',
