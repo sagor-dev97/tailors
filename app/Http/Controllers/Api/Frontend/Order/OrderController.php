@@ -225,6 +225,7 @@ class OrderController extends Controller
 
                 $phone = $customer->phone ?? null;
                 $bkash = env('BKASH_NUMBER');
+                $nagad = env('NAGAD_NUMBER');
                 if ($phone) {
 
                     $message = "প্রিয় গ্রাহক, আপনার অর্ডার সফলভাবে গ্রহণ করা হয়েছে।\n"
@@ -233,7 +234,9 @@ class OrderController extends Controller
                         . "পরিশোধ: {$request->advance} টাকা\n"
                         . "বাকি: {$request->due} টাকা\n\n"
                         . "ঢাকা টেইলার্স\n"
-                        . "মোবাইল এবং বিকাশ: {$bkash}";
+                        . "মোবাইল এবং বিকাশ: {$bkash}"
+                        . "\nনাগাদ: {$nagad}"
+                        . "\nধন্যবাদ।";
                     $smsSent = $this->sendSms($phone, $message, $order->id);
 
                     if (!$smsSent) {

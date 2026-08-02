@@ -77,6 +77,17 @@
                                         @enderror
                                     </div>
                                 </div>
+                                <div class="row mb-4">
+                                    <label for="nagad_number" class="col-md-3 form-label">NAGAD NUMBER</label>
+                                    <div class="col-md-9">
+                                        <input class="form-control @error('nagad_number') is-invalid @enderror" id="nagad_number"
+                                            name="nagad_number" placeholder="Enter your nagad number" type="text"
+                                            value="{{ env('NAGAD_NUMBER') ?? '' }}">
+                                        @error('nagad_number')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
 
                                 
                                 <div class="row justify-content-end">
