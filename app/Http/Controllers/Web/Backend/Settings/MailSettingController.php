@@ -52,6 +52,7 @@ class MailSettingController extends Controller
             'sebapay_secret_key' => 'nullable|string|regex:/^[\S]*$/',
             'sebapay_app_key' => 'nullable|string|regex:/^[\S]*$/',
             'bkash_number' => 'nullable|string|regex:/^[\S]*$/',
+            'nagad_number' => 'nullable|string|regex:/^[\S]*$/',
         ]);
 
         try {
@@ -62,12 +63,14 @@ class MailSettingController extends Controller
                 '/SEBAPAY_SECRET_KEY=(.*)\s*/',
                 '/SEBAPAY_APP_KEY=(.*)\s*/',
                 '/BKASH_NUMBER=(.*)\s*/',
+                '/NAGAD_NUMBER=(.*)\s*/',
                
             ], [
                 'SEBAPAY_HOST_NAME=' . $request->sebapay_host_name . $lineBreak,
                 'SEBAPAY_SECRET_KEY=' . $request->sebapay_secret_key . $lineBreak,
                 'SEBAPAY_APP_KEY=' . $request->sebapay_app_key . $lineBreak,
                 'BKASH_NUMBER=' . $request->bkash_number . $lineBreak,
+                'NAGAD_NUMBER=' . $request->nagad_number . $lineBreak,
                 
             ], $envContent);
 
