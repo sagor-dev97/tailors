@@ -100,7 +100,8 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'user_id'       => $authUser->id,
-                'cu_order_id'     =>(Order::max('id') ?? 0) + 1,
+                // 'cu_order_id'     =>(Order::max('id') ?? 0) + 1,
+                'cu_order_id' => str_pad((Order::max('id') ?? 0) + 1,3,'0',STR_PAD_LEFT),
                 'customer_id'   => $customer->id,
                 'receiver'      => $request->receiver,
                 'order_number'  => $orderNumber,
