@@ -100,7 +100,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'user_id'       => $authUser->id,
-                'cu_order_id'     =>$request->cu_order_id ?? null,
+                'cu_order_id'     =>(Order::max('id') ?? 0) + 1,
                 'customer_id'   => $customer->id,
                 'receiver'      => $request->receiver,
                 'order_number'  => $orderNumber,
@@ -229,7 +229,7 @@ class OrderController extends Controller
                 if ($phone) {
 
                     $message = "প্রিয় গ্রাহক, আপনার অর্ডার সফলভাবে গ্রহণ করা হয়েছে।\n"
-                        . "অর্ডার আইডি: {$order->order_number}\n"
+                        . "অর্ডার আইডি: {$order->cu_order_id}\n"
                         . "আপনার মোট টাকা: {$request->total} টাকা\n"
                         . "পরিশোধ: {$request->advance} টাকা\n"
                         . "বাকি: {$request->due} টাকা\n\n"
