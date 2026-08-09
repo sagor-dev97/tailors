@@ -230,7 +230,8 @@ class OrderController extends Controller
                 if ($phone) {
 
                     $message = "প্রিয় গ্রাহক, আপনার অর্ডার সফলভাবে গ্রহণ করা হয়েছে।\n"
-                        . "অর্ডার আইডি: {$order->cu_order_id}\n"
+                        // . "অর্ডার আইডি: {$order->cu_order_id}\n"
+                        ."অর্ডার আইডি: DT-{$order->cu_order_id}\n"
                         . "আপনার মোট টাকা: {$request->total} টাকা\n"
                         . "পরিশোধ: {$request->advance} টাকা\n"
                         . "বাকি: {$request->due} টাকা\n\n"
