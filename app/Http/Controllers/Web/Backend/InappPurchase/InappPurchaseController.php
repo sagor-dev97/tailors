@@ -53,12 +53,12 @@ class InappPurchaseController extends Controller
                 })
                 ->addColumn('action', function ($data) {
                     return '<div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-
-                                <a href="#" type="button" onclick="goToOpen(' . $data->id . ')" class="btn btn-success fs-14 text-white delete-icn" title="View">
+                                <a href="#" type="button" onclick="goToOpen(' . $data->id . ')" class="btn btn-success fs-14 text-white" title="View">
                                     <i class="fe fe-eye"></i>
                                 </a>
-
-                               
+                                <a href="#" type="button" onclick="showDeleteConfirm(' . $data->id . ')" class="btn btn-danger fs-14 text-white ms-1" title="Delete">
+                                    <i class="fe fe-trash"></i>
+                                </a>
                             </div>';
                 })
                 ->addColumn('purchase_status', function ($data) {

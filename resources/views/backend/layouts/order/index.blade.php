@@ -1,7 +1,59 @@
-@extends('backend.app', ['title' => 'Post'])
+@extends('backend.app', ['title' => 'Order List'])
 
 @push('styles')
 <link href="{{ asset('default/datatable.css') }}" rel="stylesheet" />  
+<style>
+    .status-select {
+        font-weight: 600;
+        font-size: 0.8125rem;
+        border-radius: 20px;
+        padding: 0.35rem 1.8rem 0.35rem 0.85rem;
+        cursor: pointer;
+        transition: all 0.25s ease-in-out;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        text-transform: capitalize;
+    }
+
+    .status-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    /* Professional status color themes */
+    .status-pending {
+        background-color: #fff8dd !important;
+        color: #b58105 !important;
+        border: 1px solid #f1bc00 !important;
+    }
+
+    .status-processing {
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1px solid #bae6fd !important;
+    }
+
+    .status-completed {
+        background-color: #e8fff3 !important;
+        color: #50cd89 !important;
+        border: 1px solid #a3edd0 !important;
+    }
+
+    .status-canceled {
+        background-color: #fff5f8 !important;
+        color: #f1416c !important;
+        border: 1px solid #fdd7e4 !important;
+    }
+
+    /* Loading state */
+    .status-select-wrapper.is-loading .status-select {
+        color: transparent !important;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .status-select-wrapper.is-loading .status-spinner {
+        display: block !important;
+    }
+</style>
 @endpush
 
 
@@ -17,11 +69,11 @@
             <!-- PAGE-HEADER -->
             <div class="page-header">
                 <div>
-                    <h1 class="page-title">Post</h1>
+                    <h1 class="page-title">Order List</h1>
                 </div>
                 <div class="ms-auto pageheader-btn">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="javascript:void(0);">Post</a></li>
+                        <li class="breadcrumb-item"><a href="javascript:void(0);">Order List</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Index</li>
                     </ol>
                 </div>
@@ -34,9 +86,6 @@
                     <div class="card product-sales-main">
                         <div class="card-header border-bottom">
                             <h3 class="card-title mb-0">List</h3>
-                            <div class="card-options ms-auto">
-                                <a href="{{ route('admin.post.create') }}" class="btn btn-primary btn-sm">Add</a>
-                            </div>
                         </div>
                         <div class="card-body">
                             <div class="">
@@ -157,46 +206,71 @@
         }
     });
 
-    // Status Change Confirm Alert
-    function showStatusChangeAlert(id) {
-        event.preventDefault();
+    // Handle Status Change with instant color change & loading state
+    $(document).on('change', '.change-status', function() {
+        const $select = $(this);
+        const $wrapper = $select.closest('.status-select-wrapper');
+        const orderId = $select.data('id');
+        const newStatus = $select.val();
+        const previousStatus = $select.attr('data-previous') || newStatus;
 
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'You want to update the status?',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                statusChange(id);
+        const statusClasses = {
+            'pending': 'status-pending',
+            'processing': 'status-processing',
+            'completed': 'status-completed',
+            'canceled': 'status-canceled'
+        };
+
+        // 1. Instant color update
+        $select.removeClass('status-pending status-processing status-completed status-canceled');
+        if (statusClasses[newStatus]) {
+            $select.addClass(statusClasses[newStatus]);
+        }
+
+        // 2. Loading state
+        $wrapper.addClass('is-loading');
+        $select.prop('disabled', true);
+
+        if (typeof NProgress !== 'undefined') {
+            NProgress.start();
+        }
+
+        let url = "{{ route('admin.order.status', ':id') }}";
+        url = url.replace(':id', orderId);
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                status: newStatus
+            },
+            success: function(resp) {
+                // Update previous value reference
+                $select.attr('data-previous', newStatus);
+                toastr.success((resp && resp.message) ? resp.message : ('Order status updated to ' + newStatus));
+            },
+            error: function(err) {
+                // Revert status and color on error
+                $select.val(previousStatus);
+                $select.removeClass('status-pending status-processing status-completed status-canceled');
+                if (statusClasses[previousStatus]) {
+                    $select.addClass(statusClasses[previousStatus]);
+                }
+                let errorMsg = (err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Failed to update status';
+                toastr.error(errorMsg);
+            },
+            complete: function() {
+                // Remove loading state
+                $wrapper.removeClass('is-loading');
+                $select.prop('disabled', false);
+
+                if (typeof NProgress !== 'undefined') {
+                    NProgress.done();
+                }
             }
         });
-    }
-
-   $(document).on('change', '.change-status', function() {
-    let orderId = $(this).data('id');
-    let status  = $(this).val();
-
-    let url = "{{ route('admin.order.status', ':id') }}";
-    url = url.replace(':id', orderId);
-
-    $.ajax({
-        url: url,
-        type: 'POST',
-        data: {
-            _token: '{{ csrf_token() }}',
-            status: status
-        },
-        success: function(resp) {
-            toastr.success('Order status updated to ' + status);
-        },
-        error: function(err) {
-            toastr.error('Failed to update status');
-        }
     });
-});
 
 
     // delete Confirm
@@ -219,8 +293,8 @@
 
     // Delete Button
     function deleteItem(id) {
-        NProgress.start();
-        let url = "{{ route('admin.post.destroy', ':id') }}";
+        if (typeof NProgress !== 'undefined') NProgress.start();
+        let url = "{{ route('admin.order.destroy', ':id') }}";
         let csrfToken = '{{ csrf_token() }}';
         $.ajax({
             type: "DELETE",
@@ -229,22 +303,17 @@
                 'X-CSRF-TOKEN': csrfToken
             },
             success: function(resp) {
-                NProgress.done();
+                if (typeof NProgress !== 'undefined') NProgress.done();
                 toastr.success(resp.message);
                 $('#datatable').DataTable().ajax.reload();
             },
             error: function(error) {
-                NProgress.done();
-                toastr.error(error.message);
+                if (typeof NProgress !== 'undefined') NProgress.done();
+                toastr.error(error.message || 'Error occurred');
             }
         });
     }
 
-    //edit
-    function goToEdit(id) {
-        let url = "{{ route('admin.post.edit', ':id') }}";
-        window.location.href = url.replace(':id', id);
-    }
     function goToOpen(id) {
         let url = "{{ route('admin.order.show', ':id') }}";
         window.location.href = url.replace(':id', id);

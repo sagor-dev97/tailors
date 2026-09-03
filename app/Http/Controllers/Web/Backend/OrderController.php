@@ -35,42 +35,42 @@ class OrderController extends Controller
                     return "<a href='" . route('admin.users.show', $data->user_id) . "'>" . $data->user->phone_number . "</a>";
                 })
             ->addColumn('status', function ($data) {
+                $statuses = ['pending', 'processing', 'completed', 'canceled'];
 
-    $statuses = ['pending', 'processing', 'completed', 'canceled'];
+                $colorClass = match ($data->status) {
+                    'pending' => 'status-pending',
+                    'processing' => 'status-processing',
+                    'completed' => 'status-completed',
+                    'canceled' => 'status-canceled',
+                    default => 'status-pending'
+                };
 
-    // Color mapping
-    $colorClass = match ($data->status) {
-        'pending' => 'bg-danger text-white',
-        'processing' => 'bg-warning text-dark',
-        'completed' => 'bg-success text-white',
-        'canceled' => 'bg-secondary text-white',
-        default => 'bg-light'
-    };
+                $dropdown = '<div class="status-select-wrapper position-relative d-inline-block" style="min-width: 130px;">';
+                $dropdown .= '<select class="form-select form-select-sm status-select change-status ' . $colorClass . '" data-id="' . $data->id . '" data-previous="' . $data->status . '">';
 
-    $dropdown = '<select 
-                    class="form-select form-select-sm change-status '.$colorClass.'" 
-                    data-id="' . $data->id . '">';
+                foreach ($statuses as $status) {
+                    $selected = $data->status === $status ? 'selected' : '';
+                    $dropdown .= '<option value="' . $status . '" ' . $selected . '>' . ucfirst($status) . '</option>';
+                }
 
-    foreach ($statuses as $status) {
-        $selected = $data->status === $status ? 'selected' : '';
-        $dropdown .= '<option value="' . $status . '" ' . $selected . '>' . ucfirst($status) . '</option>';
-    }
+                $dropdown .= '</select>';
+                $dropdown .= '<div class="status-spinner spinner-border spinner-border-sm text-primary position-absolute top-50 start-50 translate-middle d-none" style="width: 1.1rem; height: 1.1rem; z-index: 5;" role="status"><span class="visually-hidden">Loading...</span></div>';
+                $dropdown .= '</div>';
 
-    $dropdown .= '</select>';
-
-    return $dropdown;
-})
+                return $dropdown;
+            })
 
                 ->addColumn('customer', function ($data) {
                     return "<a href='" . route('admin.users.show', $data->user_id) . "'>" . $data->user->name . "</a>";
                 })
                 ->addColumn('action', function ($data) {
                     return '<div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-
-                                <a href="#" type="button" onclick="goToOpen(' . $data->id . ')" class="btn btn-success fs-14 text-white delete-icn" title="View">
+                                <a href="#" type="button" onclick="goToOpen(' . $data->id . ')" class="btn btn-success fs-14 text-white" title="View">
                                     <i class="fe fe-eye"></i>
                                 </a>
-
+                                <a href="#" type="button" onclick="showDeleteConfirm(' . $data->id . ')" class="btn btn-danger fs-14 text-white ms-1" title="Delete">
+                                    <i class="fe fe-trash"></i>
+                                </a>
                             </div>';
                 })
                 ->rawColumns(['customer', 'phone_number', 'status', 'action'])
@@ -115,9 +115,13 @@ class OrderController extends Controller
     {
         try {
             $data = Order::findOrFail($id);
+            if ($data->details()) {
+                $data->details()->delete();
+            }
+            $data->delete();
             return response()->json([
                 'status' => 't-success',
-                'message' => 'Your action was successful!'
+                'message' => 'Order deleted successfully!'
             ]);
         } catch (Exception $e) {
             return response()->json([
