@@ -14,13 +14,16 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: ftp.obiram.top
-          username: tailor@tailor.obiram.top
-          password: 8ZS7N8FejbSWf+Na
+          # server: ftp.obiram.top
+          # username: tailor@tailor.obiram.top
+          # password: 8ZS7N8FejbSWf+Na
           # server: 72.61.233.228
           # username: dhakatailors
           # password: YJC4grOqRmLOcMsXjpap
   
+          server: ftp.dhakatailors.com
+          username: app@admin.dhakatailors.com
+          password: l5J-]IV8E3Y0aSK^
           exclude: |
            
             **/.git*
