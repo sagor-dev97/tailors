@@ -82,6 +82,7 @@ class AdminCreateController extends Controller
             'name'         => 'required|string|max:255',
             'phone_number' => 'required|string|max:15|unique:users,phone_number',
             'address'      => 'nullable|string|max:255',
+            'password'      => 'required|string|min:8|confirmed',
         ]);
 
         try {
@@ -102,7 +103,7 @@ class AdminCreateController extends Controller
                 'name'             => $request->name,
                 'phone_number'     => $request->phone_number,
                 'address'          => $request->address,
-                'password'         => Hash::make('12345678'), // default password
+                'password'         => Hash::make($request->password),
 
                 'otp'              => null,
                 'otp_verified_at'  => Carbon::now(),
