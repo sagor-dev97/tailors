@@ -181,6 +181,7 @@ Route::controller(AdminUserController::class)->group(function () {
 
 Route::controller(OrderController::class)->group(function () {
     Route::post('/order', 'store');
+    Route::post('/delete-order/{id}', 'orderDestroy');
     Route::get('/reorder-details/{id}', 'reorderDetails');
 
     Route::post('/re-order/{orderId}', 'reOrder');

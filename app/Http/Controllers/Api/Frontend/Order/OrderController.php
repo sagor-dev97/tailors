@@ -101,7 +101,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'user_id'       => $authUser->id,
                 // 'cu_order_id'     =>(Order::max('id') ?? 0) + 1,
-                'cu_order_id' => str_pad((Order::max('id') ?? 0) + 1,3,'0',STR_PAD_LEFT),
+                'cu_order_id' => str_pad((Order::max('id') ?? 0) + 1, 3, '0', STR_PAD_LEFT),
                 'customer_id'   => $customer->id,
                 'receiver'      => $request->receiver,
                 'order_number'  => $orderNumber,
@@ -231,7 +231,7 @@ class OrderController extends Controller
 
                     $message = "প্রিয় গ্রাহক, আপনার অর্ডার সফলভাবে গ্রহণ করা হয়েছে।\n"
                         // . "অর্ডার আইডি: {$order->cu_order_id}\n"
-                        ."অর্ডার আইডি: DT-{$order->cu_order_id}\n"
+                        . "অর্ডার আইডি: DT-{$order->cu_order_id}\n"
                         . "আপনার মোট টাকা: {$request->total} টাকা\n"
                         . "পরিশোধ: {$request->advance} টাকা\n"
                         . "বাকি: {$request->due} টাকা\n\n"
@@ -1351,6 +1351,56 @@ class OrderController extends Controller
                 'status'  => false,
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+
+    // delete order
+    public function orderDestroy($id)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $authUser = auth('api')->user();
+            if (!$authUser) {
+                return response()->json([
+                    'status'  => false,
+                    'code'    => 401,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $order = Order::find($id);
+
+            if (!$order) {
+                return response()->json([
+                    'status'  => false,
+                    'code'    => 404,
+                    'message' => 'Order not found.',
+                ], 404);
+            }
+
+            // related OrderDetail(s) delete
+            // OrderDetail::where('order_id', $order->id)->delete();
+
+            $order->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => true,
+                'code'    => 200,
+                'message' => 'Order deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => false,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }
