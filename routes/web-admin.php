@@ -187,8 +187,10 @@ Route::controller(QuestionController::class)->prefix('question')->name('question
 
 Route::controller(OrderController::class)->prefix('order')->name('order.')->group(function () {
     Route::get('/', 'index')->name('index');
+    Route::get('/due', 'dueIndex')->name('due.index');
     Route::get('/show/{id}', 'show')->name('show');
     Route::post('/status/{id}', 'status')->name('status');
+    Route::post('/payment/{id}', 'updatePayment')->name('payment.update');
     Route::delete('/delete/{id}', 'destroy')->name('destroy');
 });
 Route::post('/admin/orders/{id}/status', [OrderController::class, 'status'])->name('orders.status');

@@ -272,6 +272,43 @@
         });
     });
 
+    $(document).on('click', '.update-due', function() {
+        const button = $(this);
+        const total = Number(button.data('total'));
+        const paid = Number(button.data('paid'));
+        const due = Number(button.data('due'));
+        const orderId = button.data('id');
+
+        Swal.fire({
+            title: 'Update payment',
+            html: `<div class="text-start mb-3">Total: ৳${total.toFixed(2)}<br>Paid: ৳${paid.toFixed(2)}<br><strong>Due: ৳${due.toFixed(2)}</strong></div>`,
+            input: 'number',
+            inputValue: due,
+            inputAttributes: { min: 0, max: due, step: '0.01' },
+            inputLabel: 'New payment amount',
+            showCancelButton: true,
+            confirmButtonText: 'Update amount',
+            inputValidator: (value) => {
+                const amount = Number(value);
+                if (value === '' || Number.isNaN(amount) || amount < 0 || amount > due) {
+                    return `Enter an amount between 0 and ${due.toFixed(2)}.`;
+                }
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            $.post("{{ route('admin.order.payment.update', ':id') }}".replace(':id', orderId), {
+                _token: '{{ csrf_token() }}',
+                payment_amount: result.value
+            }).done(function(response) {
+                toastr.success(response.message);
+                $('#datatable').DataTable().ajax.reload(null, false);
+            }).fail(function(xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Payment update failed.');
+            });
+        });
+    });
+
 
     // delete Confirm
     function showDeleteConfirm(id) {

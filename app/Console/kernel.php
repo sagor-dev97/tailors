@@ -9,9 +9,9 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule)
     {
-        // প্রতি মাসের ২ তারিখে রাত 9 টায়
+        // প্রতিদিন চালু থাকবে; command DB-configured দুই দিনে SMS dispatch করবে।
         $schedule->command('sms:monthly-orders')
-            ->monthlyOn(22)
+            ->dailyAt('21:00')
             ->withoutOverlapping();
     }
 

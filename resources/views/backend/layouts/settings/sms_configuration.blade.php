@@ -75,6 +75,29 @@
                             </div>
                         </div>
 
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">First monthly SMS day</label>
+                                <input type="number" min="1" max="28" id="scheduleFirstDay" class="form-control"
+                                    value="{{ $smsSetting->schedule_first_day ?? 5 }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Second monthly SMS day</label>
+                                <input type="number" min="1" max="28" id="scheduleSecondDay" class="form-control"
+                                    value="{{ $smsSetting->schedule_second_day ?? 20 }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Due SMS message</label>
+                                <textarea id="dueSmsTemplate" class="form-control" rows="3">{{ $smsSetting->due_sms_template ?? 'প্রিয় {customer_name}, আপনার অর্ডার {order_number}-এর বকেয়া {due} টাকা। অনুগ্রহ করে পরিশোধ করুন।' }}</textarea>
+                                <small class="text-muted">Available tags: {customer_name}, {order_number}, {due}</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Delivery-ready SMS message</label>
+                                <textarea id="deliverySmsTemplate" class="form-control" rows="3">{{ $smsSetting->delivery_sms_template ?? 'প্রিয় {customer_name}, আপনার পোশাক ডেলিভারির জন্য রেডি।' }}</textarea>
+                                <small class="text-muted">Available tags: {customer_name}, {order_number}</small>
+                            </div>
+                        </div>
+
                         {{-- DYNAMIC TEMPLATE SECTION --}}
                         {{-- <div
                             style="margin-top:25px;padding:20px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
@@ -830,7 +853,11 @@
                             if (v && v.trim() !== '') obj[k] = v.trim();
                         });
                         return obj;
-                    })()
+                    })(),
+                    schedule_first_day: $('#scheduleFirstDay').val(),
+                    schedule_second_day: $('#scheduleSecondDay').val(),
+                    due_sms_template: $('#dueSmsTemplate').val()
+                    , delivery_sms_template: $('#deliverySmsTemplate').val()
                 };
 
                 $.ajax({

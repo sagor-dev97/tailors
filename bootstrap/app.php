@@ -71,11 +71,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
 
-    // ->withSchedule(function (Schedule $schedule) {
-    //     // $schedule->command('app:send-emails')->everySecond();
-    //     $schedule->command('notifications:send-special-date')->daily();
-    //     $schedule->command('app:partnertrashdelete')->daily();
-    // })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('sms:monthly-orders')
+            ->dailyAt('21:00')
+            ->withoutOverlapping();
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {

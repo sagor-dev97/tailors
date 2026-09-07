@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\SmsSetting;
 use App\Models\User;
+use App\Services\SmsSender;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,6 +104,7 @@ class OrderController extends Controller
                 // 'cu_order_id'     =>(Order::max('id') ?? 0) + 1,
                 'cu_order_id' => str_pad((Order::max('id') ?? 0) + 1, 3, '0', STR_PAD_LEFT),
                 'customer_id'   => $customer->id,
+                'sms_phone'     => $customer->phone,
                 'receiver'      => $request->receiver,
                 'order_number'  => $orderNumber,
                 'order_date'    => $request->order_date,
@@ -239,7 +241,7 @@ class OrderController extends Controller
                         . "মোবাইল এবং বিকাশ: {$bkash}"
                         . "\nনাগাদ: {$nagad}"
                         . "\nধন্যবাদ।";
-                    $smsSent = $this->sendSms($phone, $message, $order->id);
+                    $smsSent = app(SmsSender::class)->send($phone, $message, $order->id);
 
                     if (!$smsSent) {
                         $smsWarning = 'SMS sending failed.';
@@ -1336,13 +1338,14 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|string|'
+            'status' => 'required|string',
+            'advance' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $order = Order::with('customer')->find($id);
+            $order = Order::with(['customer', 'orderDetail'])->find($id);
 
             if (!$order) {
                 DB::rollBack();
@@ -1353,8 +1356,31 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            // Duplicate status check
-            if ($order->status === $request->status) {
+            if ($request->has('advance')) {
+                $orderDetail = $order->orderDetail;
+                $advance = (float) $request->input('advance');
+                $total = (float) ($orderDetail->total ?? 0);
+
+                if (!$orderDetail || $advance > $total) {
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Advance cannot be greater than total amount.',
+                    ], 422);
+                }
+
+                $due = $total - $advance;
+                $orderDetail->update([
+                    'advance' => $advance,
+                    'due' => $due,
+                ]);
+                $order->update([
+                    'payment_status' => $due <= 0 ? 'paid' : 'unpaid',
+                ]);
+            }
+
+            // Duplicate status is only an error when no payment was updated.
+            if ($order->status === $request->status && !$request->has('advance')) {
                 DB::rollBack();
 
                 return response()->json([
@@ -1459,7 +1485,7 @@ class OrderController extends Controller
 
                         $message = strip_tags($message);
 
-                        $smsSent = $this->sendSms($phone, $message, $order->id);
+                        $smsSent = app(SmsSender::class)->send($phone, $message, $order->id);
 
                         if (!$smsSent) {
                             $smsWarning = 'Order updated successfully, but SMS sending failed.';

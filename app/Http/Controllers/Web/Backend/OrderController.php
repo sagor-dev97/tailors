@@ -21,7 +21,7 @@ class OrderController extends Controller
         // $data = Order::with(['details', 'user'])->orderBy('id', 'desc')->get();
         // dd($data);
         if ($request->ajax()) {
-            $data = Order::with(['details', 'user'])->orderBy('id', 'desc')->get();
+            $data = Order::with(['details', 'orderDetail', 'user', 'customer'])->orderBy('id', 'desc')->get();
             return DataTables::of($data)
                 ->addIndexColumn()
                 // ->addColumn('product', function ($data) {
@@ -64,10 +64,17 @@ class OrderController extends Controller
                     return "<a href='" . route('admin.users.show', $data->user_id) . "'>" . $data->user->name . "</a>";
                 })
                 ->addColumn('action', function ($data) {
+                    $detail = $data->orderDetail;
+                    $due = (float) ($detail->due ?? 0);
+                    $dueButton = $due > 0
+                        ? '<button type="button" class="btn btn-warning text-dark update-due" data-id="' . $data->id . '" data-total="' . ($detail->total ?? 0) . '" data-paid="' . ($detail->advance ?? 0) . '" data-due="' . $due . '" title="Update due payment"><i class="fe fe-dollar-sign"></i></button>'
+                        : '<button type="button" class="btn btn-secondary" disabled title="No due"><i class="fe fe-check"></i></button>';
+
                     return '<div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
                                 <a href="#" type="button" onclick="goToOpen(' . $data->id . ')" class="btn btn-success fs-14 text-white" title="View">
                                     <i class="fe fe-eye"></i>
                                 </a>
+                                ' . $dueButton . '
                                 <a href="#" type="button" onclick="showDeleteConfirm(' . $data->id . ')" class="btn btn-danger fs-14 text-white ms-1" title="Delete">
                                     <i class="fe fe-trash"></i>
                                 </a>
@@ -81,8 +88,19 @@ class OrderController extends Controller
 
     public function show(int $id)
     {
-        $order = Order::with(['details', 'user'])->where('id', $id)->first();
+        $order = Order::with(['details', 'orderDetail', 'user', 'customer'])->where('id', $id)->first();
         return view('backend.layouts.order.show', compact('order'));
+    }
+
+    public function dueIndex()
+    {
+        $orders = Order::with(['orderDetail', 'customer'])
+            ->whereHas('orderDetail', fn ($query) => $query->where('due', '>', 0))
+            ->where('status', '!=', 'canceled')
+            ->latest()
+            ->get();
+
+        return view('backend.layouts.order.due', compact('orders'));
     }
 
     // public function status(int $id): JsonResponse
@@ -110,6 +128,74 @@ class OrderController extends Controller
 
     return response()->json(['status' => true, 'message' => 'Order status updated']);
 }
+
+    public function updatePayment(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'advance' => ['nullable', 'numeric', 'min:0'],
+            'payment_amount' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $order = Order::with('orderDetail')->findOrFail($id);
+        $orderDetail = $order->orderDetail;
+
+        if (!$orderDetail) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Order details not found.',
+            ], 422);
+        }
+
+        $total = (float) $orderDetail->total;
+        $currentAdvance = (float) $orderDetail->advance;
+        $currentDue = max(0, $total - $currentAdvance);
+
+        if ($request->filled('payment_amount')) {
+            $paymentAmount = (float) $request->input('payment_amount');
+
+            if ($paymentAmount > $currentDue) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Payment cannot be greater than current due amount.',
+                ], 422);
+            }
+
+            $advance = $currentAdvance + $paymentAmount;
+        } else {
+            // Backward-compatible: advance is treated as the final paid total.
+            $advance = (float) $request->input('advance');
+        }
+
+        if ($advance > $total) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Advance cannot be greater than total amount.',
+            ], 422);
+        }
+
+        $due = $total - $advance;
+
+        $orderDetail->update([
+            'advance' => $advance,
+            'due' => $due,
+        ]);
+
+        $order->update([
+            'payment_status' => $due <= 0 ? 'paid' : 'unpaid',
+            'payment_paid_at' => $due <= 0 ? now() : null,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Payment and due updated successfully.',
+            'data' => [
+                'total' => $total,
+                'advance' => $advance,
+                'due' => $due,
+                'payment_status' => $order->payment_status,
+            ],
+        ]);
+    }
 
     public function destroy(string $id)
     {

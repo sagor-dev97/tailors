@@ -185,6 +185,10 @@ class SettingController extends Controller
             'sms_format'    => 'nullable|string|max:50',
             'templates_json' => 'nullable|array',  // Changed from 'templates' to 'templates_json'
             'status_labels'  => 'nullable|array',
+            'schedule_first_day' => 'required|integer|min:1|max:28',
+            'schedule_second_day' => 'required|integer|min:1|max:28|different:schedule_first_day',
+            'due_sms_template' => 'nullable|string|max:1000',
+            'delivery_sms_template' => 'nullable|string|max:1000',
         ]);
 
         $sms = SmsSetting::first();
@@ -199,6 +203,10 @@ class SettingController extends Controller
         $sms->sender      = $request->sender;
         $sms->type        = $request->type;
         $sms->sms_format  = $request->sms_format;
+        $sms->schedule_first_day = $request->schedule_first_day;
+        $sms->schedule_second_day = $request->schedule_second_day;
+        $sms->due_sms_template = $request->due_sms_template;
+        $sms->delivery_sms_template = $request->delivery_sms_template;
 
         // Template update - use templates_json from request (normalize PHP-style placeholders)
         if ($request->has('templates_json')) {

@@ -203,7 +203,17 @@
                                     </tr>
                                     <tr class="table-danger">
                                         <th colspan="3" class="text-end">Due</th>
-                                        <th>{{ number_format($detail->due, 2) }}</th>
+                                        <th>৳{{ number_format((float) $detail->due, 2) }}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Due Paid Date</th>
+                                        <td>
+                                            @if($order->payment_paid_at)
+                                                {{ $order->payment_paid_at->format('d M Y, h:i A') }}
+                                            @else
+                                                Not paid yet
+                                            @endif
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>

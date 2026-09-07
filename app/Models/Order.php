@@ -8,6 +8,12 @@ class Order extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'delivery_sms_last_sent_at' => 'datetime',
+        'due_sms_last_sent_at' => 'datetime',
+        'payment_paid_at' => 'datetime',
+    ];
+
     public function details()
     {
         return $this->hasMany(OrderDetail::class);

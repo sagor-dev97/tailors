@@ -19,13 +19,19 @@ class SmsSetting extends Model
         'sms_format',
         'sms_json',
         'status_labels',
+        'schedule_first_day',
+        'schedule_second_day',
+        'due_sms_template',
+        'delivery_sms_template',
     ];
 
     protected $casts = [
         'service_status' => 'boolean',
         'admission_status' => 'boolean',
         'templates_json' => 'array',
-        'status_labels' => 'array'
+        'status_labels' => 'array',
+        'schedule_first_day' => 'integer',
+        'schedule_second_day' => 'integer',
     ];
     public function getTemplate($status)
     {
