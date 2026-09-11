@@ -1467,8 +1467,8 @@ class OrderController extends Controller
                                 '{delivery_address}'
                             ],
                             [
-                                $smsSetting->sender ?? 'Our Company',
-                                $order->id,
+                                $smsSetting->sender ?? config('app.name'),
+                                $order->order_number ?? $order->id,
                                 $request->status,
                                 $banglaStatus[$request->status] ?? $request->status,
                                 $order->customer->name ?? 'Customer',

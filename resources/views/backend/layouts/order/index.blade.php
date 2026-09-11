@@ -43,6 +43,12 @@
         border: 1px solid #fdd7e4 !important;
     }
 
+    .status-curier, .status-curier-not-payment, .delivered-not-payment {
+        background-color: #f3e8ff !important;
+        color: #7e22ce !important;
+        border: 1px solid #d8b4fe !important;
+    }
+
     /* Loading state */
     .status-select-wrapper.is-loading .status-select {
         color: transparent !important;
@@ -218,11 +224,14 @@
             'pending': 'status-pending',
             'processing': 'status-processing',
             'completed': 'status-completed',
-            'canceled': 'status-canceled'
+            'canceled': 'status-canceled',
+            'in_courier': 'status-curier',
+            'courier_payment_not': 'status-curier-not-payment',
+            'payment_not': 'delivered-not-payment'
         };
 
         // 1. Instant color update
-        $select.removeClass('status-pending status-processing status-completed status-canceled');
+        $select.removeClass('status-pending status-processing status-completed status-canceled status-curier status-curier-not-payment delivered-not-payment');
         if (statusClasses[newStatus]) {
             $select.addClass(statusClasses[newStatus]);
         }
@@ -253,7 +262,7 @@
             error: function(err) {
                 // Revert status and color on error
                 $select.val(previousStatus);
-                $select.removeClass('status-pending status-processing status-completed status-canceled');
+                $select.removeClass('status-pending status-processing status-completed status-canceled status-curier status-curier-not-payment delivered-not-payment');
                 if (statusClasses[previousStatus]) {
                     $select.addClass(statusClasses[previousStatus]);
                 }
