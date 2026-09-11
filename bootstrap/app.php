@@ -73,7 +73,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('sms:monthly-orders')
-            ->dailyAt('21:00')
+            ->dailyAt('21:15')
+            ->timezone('Asia/Dhaka')
             ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions) {
