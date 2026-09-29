@@ -13,8 +13,8 @@ class CmsControler extends Controller
         $cmsBySection = CMS::query()
             ->get()
             ->each(function (CMS $item) {
-                $item->description = strip_tags($item->description ?? '');
-                $item->sub_description = strip_tags($item->sub_description ?? '');
+                $item->description = preg_replace('/\\s+/', ' ', strip_tags($item->description ?? ''));
+                $item->sub_description = preg_replace('/\\s+/', ' ', strip_tags($item->sub_description ?? ''));
             })
             ->groupBy('section');
         return response()->json([
