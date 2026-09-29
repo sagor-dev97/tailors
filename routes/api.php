@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Frontend\Blog\BlogController;
 use App\Http\Controllers\Api\Frontend\categoryController;
 use App\Http\Controllers\Api\Frontend\CheckRedmeeCodeController;
 use App\Http\Controllers\Api\Frontend\ContactUsController;
+use App\Http\Controllers\Api\Frontend\Cms\CmsControler;
 use App\Http\Controllers\Api\Frontend\FaqController;
 use App\Http\Controllers\Api\Frontend\FestiveAlbum\FestiveAlbumController;
 use App\Http\Controllers\Api\Frontend\Gallery\GalleryController;
@@ -155,6 +156,7 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/seen/single/{chat_id}', 'seenSingle');
 });
 Route::prefix('cms')->name('cms.')->group(function () {
+    Route::get('data', [CmsControler::class, 'CmsData'])->name('data');
     Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::get('how-it-works', [HomeController::class, 'howItWorks'])->name('how_it_works');
     Route::get('/how-it-works/details/{slug}', [HomeController::class, 'howItWorksDetails']);

@@ -10,10 +10,12 @@ class CmsControler extends Controller
 {
     public function CmsData()
     {
-        $homeIntro = CMS::all();
+        $cmsBySection = CMS::query()
+            ->get()
+            ->groupBy('section');
         return response()->json([
             'status' => 'success',
-            'data' => $homeIntro,
+            'data' => $cmsBySection,
         ]);
     }
 }

@@ -7,8 +7,8 @@ enum SectionEnum: string
     
     const BG = 'bg_image';
 
-    case EXAMPLE = 'example';
-    case EXAMPLES = 'examples';
+    case EXAMPLE = 'awaerness';
+    case EXAMPLES = 'awaernesses';
 
     case INTRO = 'intro';
     case BANNER = 'banner';

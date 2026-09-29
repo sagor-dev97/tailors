@@ -145,12 +145,12 @@
                                     class="sub-side-menu__label">About Us Page</span><i
                                     class="sub-angle fa fa-angle-right"></i></a>
                             <ul class="sub-slide-menu">
-                                <li><a href="{{ route('admin.cms.home.example.index') }}"
-                                        class="sub-slide-item">About Us</a></li>
                                 {{-- <li><a href="{{ route('admin.cms.home.intro.index') }}" class="sub-slide-item">Intro
-                                        Section</a></li> --}}
-                                <li><a href="{{ route('admin.cms.home.about.index') }}" class="sub-slide-item">About
-                                        Section</a></li>
+                                    Section</a></li> --}}
+                                    <li><a href="{{ route('admin.cms.home.about.index') }}" class="sub-slide-item">About us
+                                        </a></li>
+                                        <li><a href="{{ route('admin.cms.home.awaerness.index') }}"
+                                                class="sub-slide-item">Awarness</a></li>
                             </ul>
                         </li>
                     </ul>

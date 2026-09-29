@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\Backend\Boosting\BoostPlanController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\ChatController;
 use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeAboutController;
+use App\Enums\SectionEnum;
 use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeExampleController;
 use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeIntroController;
 use App\Http\Controllers\Web\Backend\CMS\Web\HowitWorks\HeroController;
@@ -71,7 +72,7 @@ Route::prefix('cms')->name('cms.')->group(function () {
     });
 
     //Home Example
-    Route::prefix('home/example')->name('home.example.')->controller(HomeExampleController::class)->group(function () {
+    Route::prefix('home/example')->name('home.' . SectionEnum::EXAMPLE->value . '.')->controller(HomeExampleController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::post('/', 'store')->name('store');
